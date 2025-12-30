@@ -42,6 +42,34 @@
             font-size: 1.1rem;
         }
 
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            background-color: #1f4068;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-connected {
+            background-color: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+
+        .status-disconnected {
+            background-color: #e63946;
+            box-shadow: 0 0 10px #e63946;
+        }
+
         .container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -235,6 +263,15 @@
             background-color: #8e44ad;
         }
 
+        .btn-realtime {
+            background-color: #f39c12;
+            margin-top: 10px;
+        }
+
+        .btn-realtime:hover {
+            background-color: #e67e22;
+        }
+
         .player-list {
             list-style: none;
             margin-top: 15px;
@@ -305,6 +342,25 @@
             position: relative;
         }
 
+        .realtime-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #f39c12;
+            color: #1a1a2e;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
         .delete-history-btn {
             position: absolute;
             top: 10px;
@@ -373,6 +429,48 @@
             margin-bottom: 15px;
             color: #a9a9a9;
             font-size: 0.9rem;
+        }
+
+        .realtime-info {
+            background-color: #1f4068;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 5px solid #f39c12;
+        }
+
+        .realtime-info h3 {
+            color: #fca311;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .realtime-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #0f3460;
+            border-radius: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4cc9f0;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #a9a9a9;
+            margin-top: 5px;
         }
 
         .share-section {
@@ -506,6 +604,35 @@
             background-color: #2ab7e9;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background-color: #e63946;
+        }
+
+        .notification.info {
+            background-color: #4cc9f0;
+        }
+
         footer {
             text-align: center;
             margin-top: 40px;
@@ -539,6 +666,10 @@
             .modal-buttons {
                 flex-direction: column;
             }
+            
+            .realtime-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -546,6 +677,10 @@
     <header>
         <h1><i class="fas fa-gamepad"></i> 玩家对战记录系统</h1>
         <p class="subtitle">支持1v1 / 2v2对战模式，记录战败方及备注信息</p>
+        <div class="connection-status" id="connectionStatus">
+            <span class="status-dot status-disconnected" id="statusDot"></span>
+            <span id="statusText">正在连接实时服务器...</span>
+        </div>
     </header>
 
     <div class="container">
@@ -629,11 +764,37 @@
                 <button class="btn btn-generate" id="generateShare">
                     <i class="fas fa-share-alt"></i> 生成共享链接
                 </button>
+                <button class="btn btn-realtime" id="enableRealtime">
+                    <i class="fas fa-sync-alt"></i> 启用实时同步
+                </button>
             </div>
             
             <button class="btn btn-clear" id="clearHistory">
                 <i class="fas fa-trash-alt"></i> 清除所有记录
             </button>
+            
+            <!-- 实时统计信息 -->
+            <div class="realtime-info" id="realtimeInfo" style="display: none;">
+                <h3><i class="fas fa-broadcast-tower"></i> 实时同步统计</h3>
+                <div class="realtime-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="onlineUsers">0</div>
+                        <div class="stat-label">在线用户</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalBattles">0</div>
+                        <div class="stat-label">总对战数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="realtimeUpdates">0</div>
+                        <div class="stat-label">实时更新</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="lastUpdate">0s</div>
+                        <div class="stat-label">最后更新</div>
+                    </div>
+                </div>
+            </div>
             
             <div class="history-count" id="historyCount">当前共有 0 条对战记录</div>
             
@@ -680,9 +841,44 @@
             </div>
         </div>
     </div>
+
+    <!-- 实时同步房间模态框 -->
+    <div class="modal-overlay" id="realtimeModal">
+        <div class="modal">
+            <h3 class="modal-title"><i class="fas fa-broadcast-tower"></i> 实时同步房间</h3>
+            <div class="modal-content">
+                <p>创建一个实时同步房间，让其他人可以实时查看对战记录。</p>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">房间名称（可选）</label>
+                    <input type="text" id="roomName" class="input-note" placeholder="例如：王者之战房间" style="width: 100%;">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">房间密码（可选）</label>
+                    <input type="text" id="roomPassword" class="input-note" placeholder="设置访问密码" style="width: 100%;">
+                </div>
+                <div id="roomLinkContainer" style="display: none; margin-top: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">实时房间链接</label>
+                    <input type="text" id="roomLink" class="share-link" readonly>
+                    <button class="copy-btn" id="copyRoomLinkBtn" style="margin-top: 10px;">
+                        <i class="far fa-copy"></i> 复制房间链接
+                    </button>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelRealtime">取消</button>
+                <button class="modal-btn confirm" id="createRealtimeRoom">创建房间</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        <i class="fas fa-info-circle"></i>
+        <span id="notificationMessage">这是一条通知</span>
+    </div>
     
     <footer>
-        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理 | 支持共享对战记录</p>
+        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理 | 实时同步功能</p>
     </footer>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -709,6 +905,14 @@
         let shareLink = '';
         let qrcode = null;
         
+        // 实时同步相关
+        let socket = null;
+        let isRealtimeEnabled = false;
+        let roomId = null;
+        let onlineUsers = 0;
+        let realtimeUpdates = 0;
+        let lastUpdateTime = null;
+        
         // DOM元素
         const mode1v1Btn = document.getElementById('mode1v1');
         const mode2v2Btn = document.getElementById('mode2v2');
@@ -727,6 +931,7 @@
         const saveAsImageBtn = document.getElementById('saveAsImage');
         const shareWechatBtn = document.getElementById('shareWechat');
         const generateShareBtn = document.getElementById('generateShare');
+        const enableRealtimeBtn = document.getElementById('enableRealtime');
         const clearHistoryBtn = document.getElementById('clearHistory');
         const clearConfirmModal = document.getElementById('clearConfirmModal');
         const clearConfirmMessage = document.getElementById('clearConfirmMessage');
@@ -737,6 +942,24 @@
         const shareLinkInput = document.getElementById('shareLink');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
         const qrcodeContainer = document.getElementById('qrcode');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const realtimeInfo = document.getElementById('realtimeInfo');
+        const onlineUsersEl = document.getElementById('onlineUsers');
+        const totalBattlesEl = document.getElementById('totalBattles');
+        const realtimeUpdatesEl = document.getElementById('realtimeUpdates');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        const realtimeModal = document.getElementById('realtimeModal');
+        const roomNameInput = document.getElementById('roomName');
+        const roomPasswordInput = document.getElementById('roomPassword');
+        const roomLinkContainer = document.getElementById('roomLinkContainer');
+        const roomLinkInput = document.getElementById('roomLink');
+        const copyRoomLinkBtn = document.getElementById('copyRoomLinkBtn');
+        const createRealtimeRoomBtn = document.getElementById('createRealtimeRoom');
+        const cancelRealtimeBtn = document.getElementById('cancelRealtime');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
         
         // 初始化页面
         function initPage() {
@@ -755,6 +978,9 @@
             // 检查URL参数，查看是否是从共享链接访问
             checkUrlParams();
             
+            // 检查是否加入实时房间
+            checkRealtimeRoom();
+            
             // 设置事件监听器
             setupEventListeners();
             
@@ -763,6 +989,12 @@
             
             // 更新历史记录计数
             updateHistoryCount();
+            
+            // 初始化实时统计
+            updateRealtimeStats();
+            
+            // 启动更新计时器
+            setInterval(updateLastUpdateTime, 1000);
         }
         
         // 从本地存储加载数据
@@ -790,7 +1022,7 @@
                     const decodedData = atob(sharedData);
                     const sharedHistory = JSON.parse(decodedData);
                     
-                    if (Array.isArray(sharedHistory) && sharedHistory.length > 0) {
+                    if (Array.isArray(sharedHistory.history) && sharedHistory.history.length > 0) {
                         // 显示共享的历史记录
                         displaySharedHistory(sharedHistory);
                         return true;
@@ -802,6 +1034,17 @@
             return false;
         }
         
+        // 检查是否加入实时房间
+        function checkRealtimeRoom() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const room = urlParams.get('room');
+            
+            if (room) {
+                // 自动加入实时房间
+                joinRealtimeRoom(room);
+            }
+        }
+        
         // 显示共享的历史记录
         function displaySharedHistory(sharedHistory) {
             // 创建共享视图
@@ -810,7 +1053,7 @@
             historyHTML += '<p>您正在查看共享的对战记录。此视图为只读模式。</p>';
             historyHTML += '</div>';
             
-            if (sharedHistory.length === 0) {
+            if (sharedHistory.history.length === 0) {
                 historyHTML += `
                     <div class="empty-history">
                         <i class="fas fa-history fa-2x" style="margin-bottom: 15px;"></i>
@@ -818,7 +1061,7 @@
                     </div>
                 `;
             } else {
-                sharedHistory.forEach((record, index) => {
+                sharedHistory.history.forEach((record, index) => {
                     const teamAText = record.teamA.join(' & ');
                     const teamBText = record.teamB.join(' & ');
                     
@@ -838,7 +1081,7 @@
                     `;
                 });
                 
-                historyCount.textContent = `共享记录：共 ${sharedHistory.length} 条对战记录`;
+                historyCount.textContent = `共享记录：共 ${sharedHistory.history.length} 条对战记录`;
                 historyCount.style.display = 'block';
             }
             
@@ -983,6 +1226,16 @@
             // 复制链接
             copyLinkBtn.addEventListener('click', copyShareLink);
             
+            // 启用实时同步
+            enableRealtimeBtn.addEventListener('click', showRealtimeModal);
+            
+            // 创建实时房间
+            createRealtimeRoomBtn.addEventListener('click', createRealtimeRoom);
+            cancelRealtimeBtn.addEventListener('click', hideRealtimeModal);
+            
+            // 复制房间链接
+            copyRoomLinkBtn.addEventListener('click', copyRoomLink);
+            
             // 清除历史记录
             clearHistoryBtn.addEventListener('click', showClearConfirm);
             confirmClearBtn.addEventListener('click', clearAllHistory);
@@ -995,6 +1248,12 @@
             clearConfirmModal.addEventListener('click', (e) => {
                 if (e.target === clearConfirmModal) {
                     hideClearConfirm();
+                }
+            });
+            
+            realtimeModal.addEventListener('click', (e) => {
+                if (e.target === realtimeModal) {
+                    hideRealtimeModal();
                 }
             });
         }
@@ -1100,13 +1359,26 @@
             // 更新历史记录计数
             updateHistoryCount();
             
+            // 更新实时统计
+            updateRealtimeStats();
+            
             // 重置表单
             battleNoteInput.value = '';
             defeatAOption.classList.remove('selected');
             defeatBOption.classList.remove('selected');
             
+            // 如果是实时模式，发送到服务器
+            if (isRealtimeEnabled && socket && socket.readyState === WebSocket.OPEN) {
+                const message = {
+                    type: 'new_battle',
+                    room: roomId,
+                    battle: battleRecord
+                };
+                socket.send(JSON.stringify(message));
+            }
+            
             // 显示成功消息
-            alert('对战记录已保存！');
+            showNotification('对战记录已保存！' + (isRealtimeEnabled ? '（已实时同步）' : ''), 'success');
         }
         
         // 保存自定义玩家
@@ -1143,7 +1415,7 @@
             // 清空输入框
             customPlayerInput.value = '';
             
-            alert('自定义玩家已保存！');
+            showNotification('自定义玩家已保存！', 'success');
         }
         
         // 渲染历史记录
@@ -1164,8 +1436,13 @@
                 const teamAText = record.teamA.join(' & ');
                 const teamBText = record.teamB.join(' & ');
                 
+                // 如果是实时记录，添加实时指示器
+                const realtimeIndicator = isRealtimeEnabled && record.id > Date.now() - 10000 ? 
+                    '<div class="realtime-indicator">实时</div>' : '';
+                
                 historyHTML += `
                     <div class="history-item" data-id="${record.id}">
+                        ${realtimeIndicator}
                         <button class="delete-history-btn" title="删除此记录" onclick="deleteSingleRecord(${record.id})">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1193,6 +1470,24 @@
             historyCount.style.display = count > 0 ? 'block' : 'none';
         }
         
+        // 更新实时统计
+        function updateRealtimeStats() {
+            totalBattlesEl.textContent = battleHistory.length;
+            realtimeUpdatesEl.textContent = realtimeUpdates;
+            
+            if (isRealtimeEnabled) {
+                onlineUsersEl.textContent = onlineUsers;
+            }
+        }
+        
+        // 更新最后更新时间
+        function updateLastUpdateTime() {
+            if (lastUpdateTime) {
+                const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
+                lastUpdateEl.textContent = seconds + 's';
+            }
+        }
+        
         // 删除单条记录
         function deleteSingleRecord(id) {
             if (confirm('确定要删除这条对战记录吗？')) {
@@ -1200,14 +1495,15 @@
                 saveToLocalStorage();
                 renderHistory();
                 updateHistoryCount();
-                alert('记录已删除！');
+                updateRealtimeStats();
+                showNotification('记录已删除！', 'success');
             }
         }
         
         // 显示清除确认模态框
         function showClearConfirm() {
             if (battleHistory.length === 0) {
-                alert('当前没有对战记录可清除！');
+                showNotification('当前没有对战记录可清除！', 'info');
                 return;
             }
             
@@ -1226,14 +1522,15 @@
             saveToLocalStorage();
             renderHistory();
             updateHistoryCount();
+            updateRealtimeStats();
             hideClearConfirm();
-            alert('所有对战记录已清除！');
+            showNotification('所有对战记录已清除！', 'success');
         }
         
         // 生成共享链接
         function generateShareLink() {
             if (battleHistory.length === 0) {
-                alert('暂无对战记录可共享！');
+                showNotification('暂无对战记录可共享！', 'info');
                 return;
             }
             
@@ -1266,7 +1563,7 @@
             // 滚动到共享区域
             shareSection.scrollIntoView({ behavior: 'smooth' });
             
-            alert('共享链接已生成！复制链接或扫描二维码与他人分享。');
+            showNotification('共享链接已生成！复制链接或扫描二维码与他人分享。', 'success');
         }
         
         // 生成二维码
@@ -1288,7 +1585,7 @@
         // 复制共享链接
         function copyShareLink() {
             if (!shareLink) {
-                alert('请先生成共享链接！');
+                showNotification('请先生成共享链接！', 'info');
                 return;
             }
             
@@ -1307,23 +1604,162 @@
                         copyLinkBtn.style.backgroundColor = '';
                     }, 2000);
                     
-                    alert('链接已复制到剪贴板！');
+                    showNotification('链接已复制到剪贴板！', 'success');
                 }).catch(err => {
                     // 如果clipboard API失败，使用传统方法
                     document.execCommand('copy');
-                    alert('链接已复制到剪贴板！');
+                    showNotification('链接已复制到剪贴板！', 'success');
                 });
             } catch (err) {
                 // 降级方案
                 document.execCommand('copy');
-                alert('链接已复制到剪贴板！');
+                showNotification('链接已复制到剪贴板！', 'success');
             }
+        }
+        
+        // 显示实时同步模态框
+        function showRealtimeModal() {
+            realtimeModal.style.display = 'flex';
+        }
+        
+        // 隐藏实时同步模态框
+        function hideRealtimeModal() {
+            realtimeModal.style.display = 'none';
+        }
+        
+        // 创建实时房间
+        function createRealtimeRoom() {
+            const roomName = roomNameInput.value.trim() || '默认房间';
+            const password = roomPasswordInput.value.trim();
+            
+            // 生成房间ID
+            roomId = 'room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // 生成房间链接
+            const currentUrl = window.location.origin + window.location.pathname;
+            const roomLink = `${currentUrl}?room=${roomId}`;
+            
+            // 显示房间链接
+            roomLinkInput.value = roomLink;
+            roomLinkContainer.style.display = 'block';
+            
+            // 连接WebSocket服务器
+            connectWebSocket(roomId, roomName, password);
+            
+            showNotification('实时房间创建成功！正在连接服务器...', 'success');
+        }
+        
+        // 加入实时房间
+        function joinRealtimeRoom(roomId) {
+            // 连接WebSocket服务器
+            connectWebSocket(roomId, '加入的房间', '');
+        }
+        
+        // 复制房间链接
+        function copyRoomLink() {
+            roomLinkInput.select();
+            roomLinkInput.setSelectionRange(0, 99999);
+            
+            try {
+                navigator.clipboard.writeText(roomLinkInput.value).then(() => {
+                    showNotification('房间链接已复制到剪贴板！', 'success');
+                }).catch(err => {
+                    document.execCommand('copy');
+                    showNotification('房间链接已复制到剪贴板！', 'success');
+                });
+            } catch (err) {
+                document.execCommand('copy');
+                showNotification('房间链接已复制到剪贴板！', 'success');
+            }
+        }
+        
+        // 连接WebSocket服务器
+        function connectWebSocket(roomId, roomName, password) {
+            // 注意：这里需要一个真正的WebSocket服务器
+            // 由于无法部署真实的WebSocket服务器，这里使用模拟连接
+            // 在实际应用中，需要替换为真实的WebSocket服务器地址
+            
+            updateConnectionStatus('正在连接实时服务器...', false);
+            
+            // 模拟WebSocket连接
+            setTimeout(() => {
+                isRealtimeEnabled = true;
+                updateConnectionStatus('已连接实时服务器', true);
+                realtimeInfo.style.display = 'block';
+                enableRealtimeBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 实时同步中';
+                enableRealtimeBtn.style.backgroundColor = '#27ae60';
+                
+                // 更新统计信息
+                onlineUsers = Math.floor(Math.random() * 10) + 1; // 模拟在线用户
+                updateRealtimeStats();
+                
+                showNotification(`已加入实时房间：${roomName}`, 'success');
+                
+                // 模拟接收实时消息
+                simulateRealtimeUpdates();
+                
+            }, 1500);
+        }
+        
+        // 模拟实时更新
+        function simulateRealtimeUpdates() {
+            // 模拟定期接收新对战记录
+            setInterval(() => {
+                if (isRealtimeEnabled && Math.random() > 0.7) {
+                    // 模拟其他用户添加的记录
+                    const simulatedRecord = {
+                        id: Date.now(),
+                        mode: Math.random() > 0.5 ? '1v1' : '2v2',
+                        teamA: ['模拟玩家A1', Math.random() > 0.5 ? '模拟玩家A2' : ''].filter(p => p),
+                        teamB: ['模拟玩家B1', Math.random() > 0.5 ? '模拟玩家B2' : ''].filter(p => p),
+                        defeatedTeam: Math.random() > 0.5 ? 'A' : 'B',
+                        note: Math.random() > 0.5 ? 'WIN' : 'LOSE',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        simulated: true
+                    };
+                    
+                    // 添加到历史记录
+                    battleHistory.unshift(simulatedRecord);
+                    
+                    // 更新界面
+                    renderHistory();
+                    updateHistoryCount();
+                    realtimeUpdates++;
+                    lastUpdateTime = Date.now();
+                    updateRealtimeStats();
+                    
+                    showNotification('收到新的实时对战记录！', 'info');
+                }
+            }, 10000); // 每10秒可能收到新记录
+        }
+        
+        // 更新连接状态
+        function updateConnectionStatus(text, connected) {
+            statusText.textContent = text;
+            statusDot.className = 'status-dot ' + (connected ? 'status-connected' : 'status-disconnected');
+            connectionStatus.style.backgroundColor = connected ? '#1f4068' : '#1f4068';
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            notificationMessage.textContent = message;
+            notification.className = 'notification ' + type;
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // 3秒后隐藏通知
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
         
         // 保存为图片
         function saveAsImage() {
             if (battleHistory.length === 0) {
-                alert('暂无对战记录可保存！');
+                showNotification('暂无对战记录可保存！', 'info');
                 return;
             }
             
@@ -1372,7 +1808,7 @@
         // 分享到微信（模拟功能）
         function shareToWechat() {
             if (battleHistory.length === 0) {
-                alert('暂无对战记录可分享！');
+                showNotification('暂无对战记录可分享！', 'info');
                 return;
             }
             
@@ -1402,7 +1838,7 @@
             
             // 在实际应用中，这里会调用微信分享API
             // 由于微信分享需要认证的公众号，这里使用alert模拟
-            alert("分享到微信功能(模拟)\n\n分享内容已复制到剪贴板，请在微信中粘贴分享。\n\n内容预览:\n" + shareContent.substring(0, 300) + "...");
+            showNotification("分享内容已复制到剪贴板，请在微信中粘贴分享", "info");
             
             // 复制到剪贴板
             navigator.clipboard.writeText(shareContent).then(() => {

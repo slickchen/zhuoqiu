@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>玩家对战记录系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.css">
     <style>
         * {
             margin: 0;
@@ -225,6 +226,15 @@
             background-color: #d32f2f;
         }
 
+        .btn-generate {
+            background-color: #9b59b6;
+            margin-top: 10px;
+        }
+
+        .btn-generate:hover {
+            background-color: #8e44ad;
+        }
+
         .player-list {
             list-style: none;
             margin-top: 15px;
@@ -349,10 +359,13 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .history-controls .btn {
             margin-top: 0;
+            flex: 1;
+            min-width: 150px;
         }
 
         .history-count {
@@ -360,6 +373,67 @@
             margin-bottom: 15px;
             color: #a9a9a9;
             font-size: 0.9rem;
+        }
+
+        .share-section {
+            background-color: #1f4068;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .share-link-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .share-link {
+            flex: 1;
+            padding: 10px;
+            background-color: #0f3460;
+            color: #e6e6e6;
+            border: 1px solid #4cc9f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            padding: 10px 15px;
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background-color: #2ab7e9;
+        }
+
+        .qrcode-container {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .qrcode-label {
+            margin-bottom: 10px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .share-info {
+            margin-top: 15px;
+            color: #a9a9a9;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
         .modal-overlay {
@@ -451,6 +525,10 @@
             }
             
             .history-controls {
+                flex-direction: column;
+            }
+            
+            .share-link-container {
                 flex-direction: column;
             }
             
@@ -548,6 +626,9 @@
                 <button class="btn btn-share" id="shareWechat">
                     <i class="fab fa-weixin"></i> 分享到微信
                 </button>
+                <button class="btn btn-generate" id="generateShare">
+                    <i class="fas fa-share-alt"></i> 生成共享链接
+                </button>
             </div>
             
             <button class="btn btn-clear" id="clearHistory">
@@ -555,6 +636,26 @@
             </button>
             
             <div class="history-count" id="historyCount">当前共有 0 条对战记录</div>
+            
+            <!-- 共享链接区域 -->
+            <div class="share-section" id="shareSection" style="display: none;">
+                <h3 style="color: #fca311; margin-bottom: 15px;">
+                    <i class="fas fa-link"></i> 共享对战记录
+                </h3>
+                <div class="share-link-container">
+                    <input type="text" class="share-link" id="shareLink" readonly>
+                    <button class="copy-btn" id="copyLinkBtn">
+                        <i class="far fa-copy"></i> 复制链接
+                    </button>
+                </div>
+                <div style="text-align: center;">
+                    <div id="qrcode"></div>
+                </div>
+                <div class="share-info">
+                    <p><i class="fas fa-info-circle"></i> 将此链接或二维码分享给其他人，他们可以查看完整的对战历史记录</p>
+                    <p>链接有效期：永久有效（数据存储在本地）</p>
+                </div>
+            </div>
             
             <div id="historyList">
                 <div class="empty-history">
@@ -581,10 +682,11 @@
     </div>
     
     <footer>
-        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理</p>
+        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理 | 支持共享对战记录</p>
     </footer>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // 初始固定玩家列表 - 指定的7位玩家
         const fixedPlayers = [
@@ -603,6 +705,10 @@
         // 对战历史记录
         let battleHistory = [];
         
+        // 共享链接
+        let shareLink = '';
+        let qrcode = null;
+        
         // DOM元素
         const mode1v1Btn = document.getElementById('mode1v1');
         const mode2v2Btn = document.getElementById('mode2v2');
@@ -620,12 +726,17 @@
         const historyList = document.getElementById('historyList');
         const saveAsImageBtn = document.getElementById('saveAsImage');
         const shareWechatBtn = document.getElementById('shareWechat');
+        const generateShareBtn = document.getElementById('generateShare');
         const clearHistoryBtn = document.getElementById('clearHistory');
         const clearConfirmModal = document.getElementById('clearConfirmModal');
         const clearConfirmMessage = document.getElementById('clearConfirmMessage');
         const confirmClearBtn = document.getElementById('confirmClear');
         const cancelClearBtn = document.getElementById('cancelClear');
         const historyCount = document.getElementById('historyCount');
+        const shareSection = document.getElementById('shareSection');
+        const shareLinkInput = document.getElementById('shareLink');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const qrcodeContainer = document.getElementById('qrcode');
         
         // 初始化页面
         function initPage() {
@@ -640,6 +751,9 @@
             
             // 设置默认对战模式
             setMode('1v1');
+            
+            // 检查URL参数，查看是否是从共享链接访问
+            checkUrlParams();
             
             // 设置事件监听器
             setupEventListeners();
@@ -663,6 +777,87 @@
             if (savedBattleHistory) {
                 battleHistory = JSON.parse(savedBattleHistory);
             }
+        }
+        
+        // 检查URL参数
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedData = urlParams.get('data');
+            
+            if (sharedData) {
+                try {
+                    // 解码Base64数据
+                    const decodedData = atob(sharedData);
+                    const sharedHistory = JSON.parse(decodedData);
+                    
+                    if (Array.isArray(sharedHistory) && sharedHistory.length > 0) {
+                        // 显示共享的历史记录
+                        displaySharedHistory(sharedHistory);
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('解析共享数据失败:', e);
+                }
+            }
+            return false;
+        }
+        
+        // 显示共享的历史记录
+        function displaySharedHistory(sharedHistory) {
+            // 创建共享视图
+            let historyHTML = '<div style="margin-bottom: 20px; padding: 15px; background-color: #2ecc71; border-radius: 8px; color: white;">';
+            historyHTML += '<h3><i class="fas fa-share-alt"></i> 共享对战记录视图</h3>';
+            historyHTML += '<p>您正在查看共享的对战记录。此视图为只读模式。</p>';
+            historyHTML += '</div>';
+            
+            if (sharedHistory.length === 0) {
+                historyHTML += `
+                    <div class="empty-history">
+                        <i class="fas fa-history fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>共享的对战记录为空</p>
+                    </div>
+                `;
+            } else {
+                sharedHistory.forEach((record, index) => {
+                    const teamAText = record.teamA.join(' & ');
+                    const teamBText = record.teamB.join(' & ');
+                    
+                    historyHTML += `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'} (#${index + 1})</span>
+                                <span>${record.timestamp}</span>
+                            </div>
+                            <div class="history-details">
+                                <div><strong>A队：</strong> ${teamAText}</div>
+                                <div><strong>B队：</strong> ${teamBText}</div>
+                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
+                            </div>
+                            ${record.note ? `<div class="history-note"><strong>备注：</strong> ${record.note}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                historyCount.textContent = `共享记录：共 ${sharedHistory.length} 条对战记录`;
+                historyCount.style.display = 'block';
+            }
+            
+            historyList.innerHTML = historyHTML;
+            
+            // 隐藏编辑功能按钮，因为是只读视图
+            document.querySelector('.history-controls').style.display = 'none';
+            document.getElementById('clearHistory').style.display = 'none';
+            document.getElementById('recordBattle').style.display = 'none';
+            
+            // 添加返回按钮
+            const backButton = document.createElement('button');
+            backButton.className = 'btn';
+            backButton.style.marginTop = '20px';
+            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> 返回主页面';
+            backButton.onclick = () => {
+                window.location.href = window.location.pathname;
+            };
+            historyList.parentNode.insertBefore(backButton, historyList.nextSibling);
         }
         
         // 初始化玩家选择下拉菜单
@@ -781,6 +976,12 @@
             
             // 分享到微信
             shareWechatBtn.addEventListener('click', shareToWechat);
+            
+            // 生成共享链接
+            generateShareBtn.addEventListener('click', generateShareLink);
+            
+            // 复制链接
+            copyLinkBtn.addEventListener('click', copyShareLink);
             
             // 清除历史记录
             clearHistoryBtn.addEventListener('click', showClearConfirm);
@@ -1027,6 +1228,96 @@
             updateHistoryCount();
             hideClearConfirm();
             alert('所有对战记录已清除！');
+        }
+        
+        // 生成共享链接
+        function generateShareLink() {
+            if (battleHistory.length === 0) {
+                alert('暂无对战记录可共享！');
+                return;
+            }
+            
+            // 创建共享数据
+            const shareData = {
+                history: battleHistory,
+                players: {
+                    fixed: fixedPlayers,
+                    custom: customPlayers
+                },
+                generatedAt: new Date().toLocaleString('zh-CN'),
+                totalRecords: battleHistory.length
+            };
+            
+            // 将数据转换为Base64编码
+            const jsonString = JSON.stringify(shareData);
+            const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+            
+            // 生成共享链接
+            const currentUrl = window.location.origin + window.location.pathname;
+            shareLink = `${currentUrl}?data=${base64Data}`;
+            
+            // 显示共享链接
+            shareLinkInput.value = shareLink;
+            shareSection.style.display = 'block';
+            
+            // 生成二维码
+            generateQRCode();
+            
+            // 滚动到共享区域
+            shareSection.scrollIntoView({ behavior: 'smooth' });
+            
+            alert('共享链接已生成！复制链接或扫描二维码与他人分享。');
+        }
+        
+        // 生成二维码
+        function generateQRCode() {
+            // 清除之前的二维码
+            qrcodeContainer.innerHTML = '';
+            
+            // 生成新的二维码
+            qrcode = new QRCode(qrcodeContainer, {
+                text: shareLink,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // 复制共享链接
+        function copyShareLink() {
+            if (!shareLink) {
+                alert('请先生成共享链接！');
+                return;
+            }
+            
+            shareLinkInput.select();
+            shareLinkInput.setSelectionRange(0, 99999); // 移动设备兼容
+            
+            try {
+                navigator.clipboard.writeText(shareLink).then(() => {
+                    // 复制成功反馈
+                    const originalText = copyLinkBtn.innerHTML;
+                    copyLinkBtn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                    copyLinkBtn.style.backgroundColor = '#2ecc71';
+                    
+                    setTimeout(() => {
+                        copyLinkBtn.innerHTML = originalText;
+                        copyLinkBtn.style.backgroundColor = '';
+                    }, 2000);
+                    
+                    alert('链接已复制到剪贴板！');
+                }).catch(err => {
+                    // 如果clipboard API失败，使用传统方法
+                    document.execCommand('copy');
+                    alert('链接已复制到剪贴板！');
+                });
+            } catch (err) {
+                // 降级方案
+                document.execCommand('copy');
+                alert('链接已复制到剪贴板！');
+            }
         }
         
         // 保存为图片

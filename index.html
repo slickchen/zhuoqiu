@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玩家对战记录系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #0f4c75;
+        }
+
+        h1 {
+            color: #4cc9f0;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            color: #a9a9a9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background-color: #162447;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-title {
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0f4c75;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.2rem;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #1f4068;
+            border: 2px solid #0f4c75;
+            color: #e6e6e6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            background-color: #0f4c75;
+        }
+
+        .mode-btn.active {
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+            border-color: #4cc9f0;
+        }
+
+        .team-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .team {
+            background-color: #1f4068;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .team-title {
+            color: #fca311;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background-color: #0f3460;
+            color: #e6e6e6;
+            border: 1px solid #4cc9f0;
+            border-radius: 6px;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a9a9a9;
+        }
+
+        .defeat-selector {
+            display: flex;
+            gap: 15px;
+        }
+
+        .defeat-option {
+            flex: 1;
+            padding: 12px;
+            background-color: #1f4068;
+            border: 2px solid #0f4c75;
+            color: #e6e6e6;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .defeat-option:hover {
+            background-color: #0f4c75;
+        }
+
+        .defeat-option.selected {
+            background-color: #e63946;
+            border-color: #e63946;
+        }
+
+        .input-note {
+            width: 100%;
+            padding: 10px;
+            background-color: #0f3460;
+            color: #e6e6e6;
+            border: 1px solid #4cc9f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #a9a9a9;
+            margin-top: 5px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2ab7e9;
+            transform: translateY(-2px);
+        }
+
+        .btn-share {
+            background-color: #2ecc71;
+            margin-top: 15px;
+        }
+
+        .btn-share:hover {
+            background-color: #27ae60;
+        }
+
+        .player-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .player-item {
+            background-color: #1f4068;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name {
+            font-weight: 600;
+        }
+
+        .player-type {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background-color: #0f4c75;
+        }
+
+        .player-type.fixed {
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+        }
+
+        .player-type.custom {
+            background-color: #fca311;
+            color: #1a1a2e;
+        }
+
+        .custom-player-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .custom-player-input input {
+            flex: 1;
+            padding: 10px;
+            background-color: #0f3460;
+            color: #e6e6e6;
+            border: 1px solid #4cc9f0;
+            border-radius: 6px;
+        }
+
+        .custom-player-input button {
+            padding: 10px 20px;
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .history-item {
+            background-color: #1f4068;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #4cc9f0;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #fca311;
+            font-weight: 600;
+        }
+
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .history-note {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #0f3460;
+            border-radius: 4px;
+            font-style: italic;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: #a9a9a9;
+            font-style: italic;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #0f4c75;
+            color: #a9a9a9;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-selector, .defeat-selector {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-gamepad"></i> 玩家对战记录系统</h1>
+        <p class="subtitle">支持1v1 / 2v2对战模式，记录战败方及备注信息</p>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-cogs"></i> 对战设置</h2>
+            
+            <div class="mode-selector">
+                <div class="mode-btn active" id="mode1v1">1V1 对战</div>
+                <div class="mode-btn" id="mode2v2">2V2 对战</div>
+            </div>
+            
+            <div class="team-container">
+                <div class="team" id="teamA">
+                    <div class="team-title">A 队</div>
+                    <select id="playerA1">
+                        <option value="">选择玩家1</option>
+                    </select>
+                    <select id="playerA2" style="display: none;">
+                        <option value="">选择玩家2</option>
+                    </select>
+                </div>
+                
+                <div class="team" id="teamB">
+                    <div class="team-title">B 队</div>
+                    <select id="playerB1">
+                        <option value="">选择玩家1</option>
+                    </select>
+                    <select id="playerB2" style="display: none;">
+                        <option value="">选择玩家2</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">选择战败方：</label>
+                <div class="defeat-selector">
+                    <div class="defeat-option" id="defeatA">A队</div>
+                    <div class="defeat-option" id="defeatB">B队</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">战败备注（可输入大写字母/数字 A-Z/0-9）：</label>
+                <input type="text" class="input-note" id="battleNote" placeholder="例：A1、B5、X9 等" maxlength="10">
+                <div class="char-count">仅支持大写英文字母（A-Z）和数字（0-9），最多10个字符</div>
+            </div>
+            
+            <button class="btn" id="recordBattle">
+                <i class="fas fa-save"></i> 记录对战结果
+            </button>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-users"></i> 玩家管理（共10位）</h2>
+            
+            <h3>固定玩家（7位，不可修改）：</h3>
+            <ul class="player-list" id="fixedPlayers"></ul>
+            
+            <h3>自定义玩家（3位，可修改）：</h3>
+            <ul class="player-list" id="customPlayers"></ul>
+            
+            <div class="custom-player-input">
+                <input type="text" id="customPlayerInput" placeholder="输入自定义玩家名称">
+                <button id="saveCustomPlayer">保存</button>
+            </div>
+            
+            <h3 style="margin-top: 20px;">所有可用玩家（10位）：</h3>
+            <ul class="player-list" id="allPlayers"></ul>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-history"></i> 对战历史记录</h2>
+            
+            <button class="btn btn-share" id="saveAsImage">
+                <i class="fas fa-image"></i> 保存记录为图片
+            </button>
+            <button class="btn btn-share" id="shareWechat">
+                <i class="fab fa-weixin"></i> 分享到微信
+            </button>
+            
+            <div id="historyList">
+                <div class="empty-history">
+                    <i class="fas fa-history fa-2x" style="margin-bottom: 15px;"></i>
+                    <p>暂无对战记录</p>
+                    <p>请开始记录对战</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理</p>
+    </footer>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        // 初始固定玩家列表 - 使用指定的7位玩家
+        const fixedPlayers = [
+            "第一陈", 
+            "斯提芬饭", 
+            "低质量黎", 
+            "复愁满伍", 
+            "鬼仔关", 
+            "十二生肖", 
+            "老王子米高"
+        ];
+        
+        // 初始自定义玩家列表
+        let customPlayers = ["自定义1", "自定义2", "自定义3"];
+        
+        // 对战历史记录
+        let battleHistory = [];
+        
+        // DOM元素
+        const mode1v1Btn = document.getElementById('mode1v1');
+        const mode2v2Btn = document.getElementById('mode2v2');
+        const playerA2Select = document.getElementById('playerA2');
+        const playerB2Select = document.getElementById('playerB2');
+        const defeatAOption = document.getElementById('defeatA');
+        const defeatBOption = document.getElementById('defeatB');
+        const battleNoteInput = document.getElementById('battleNote');
+        const recordBattleBtn = document.getElementById('recordBattle');
+        const fixedPlayersList = document.getElementById('fixedPlayers');
+        const customPlayersList = document.getElementById('customPlayers');
+        const allPlayersList = document.getElementById('allPlayers');
+        const customPlayerInput = document.getElementById('customPlayerInput');
+        const saveCustomPlayerBtn = document.getElementById('saveCustomPlayer');
+        const historyList = document.getElementById('historyList');
+        const saveAsImageBtn = document.getElementById('saveAsImage');
+        const shareWechatBtn = document.getElementById('shareWechat');
+        
+        // 初始化页面
+        function initPage() {
+            // 从本地存储加载数据
+            loadFromLocalStorage();
+            
+            // 初始化玩家选择下拉菜单
+            initPlayerSelects();
+            
+            // 初始化玩家列表显示
+            renderPlayerLists();
+            
+            // 设置默认对战模式
+            setMode('1v1');
+            
+            // 设置默认战败方
+            selectDefeat('A');
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 渲染历史记录
+            renderHistory();
+        }
+        
+        // 从本地存储加载数据
+        function loadFromLocalStorage() {
+            const savedCustomPlayers = localStorage.getItem('customPlayers');
+            const savedBattleHistory = localStorage.getItem('battleHistory');
+            
+            if (savedCustomPlayers) {
+                customPlayers = JSON.parse(savedCustomPlayers);
+            }
+            
+            if (savedBattleHistory) {
+                battleHistory = JSON.parse(savedBattleHistory);
+            }
+        }
+        
+        // 初始化玩家选择下拉菜单
+        function initPlayerSelects() {
+            const allPlayers = [...fixedPlayers, ...customPlayers];
+            const playerSelects = [
+                document.getElementById('playerA1'),
+                document.getElementById('playerA2'),
+                document.getElementById('playerB1'),
+                document.getElementById('playerB2')
+            ];
+            
+            // 清空所有选项（除了第一个占位选项）
+            playerSelects.forEach(select => {
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+            });
+            
+            // 添加玩家选项
+            allPlayers.forEach(player => {
+                playerSelects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = player;
+                    option.textContent = player;
+                    select.appendChild(option);
+                });
+            });
+            
+            // 设置默认选择
+            if (allPlayers.length >= 2) {
+                document.getElementById('playerA1').value = allPlayers[0];
+                document.getElementById('playerB1').value = allPlayers[1];
+            }
+        }
+        
+        // 渲染玩家列表
+        function renderPlayerLists() {
+            // 清空列表
+            fixedPlayersList.innerHTML = '';
+            customPlayersList.innerHTML = '';
+            allPlayersList.innerHTML = '';
+            
+            // 渲染固定玩家
+            fixedPlayers.forEach(player => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <span class="player-name">${player}</span>
+                    <span class="player-type fixed">固定</span>
+                `;
+                fixedPlayersList.appendChild(li);
+            });
+            
+            // 渲染自定义玩家
+            customPlayers.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <span class="player-name">${player}</span>
+                    <span class="player-type custom">自定义 ${index + 1}</span>
+                `;
+                customPlayersList.appendChild(li);
+            });
+            
+            // 渲染所有玩家
+            const allPlayers = [...fixedPlayers, ...customPlayers];
+            allPlayers.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                
+                const playerType = index < fixedPlayers.length ? 
+                    `<span class="player-type fixed">固定</span>` : 
+                    `<span class="player-type custom">自定义</span>`;
+                
+                li.innerHTML = `
+                    <span class="player-name">${player}</span>
+                    ${playerType}
+                `;
+                allPlayersList.appendChild(li);
+            });
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 模式切换
+            mode1v1Btn.addEventListener('click', () => setMode('1v1'));
+            mode2v2Btn.addEventListener('click', () => setMode('2v2'));
+            
+            // 战败方选择
+            defeatAOption.addEventListener('click', () => selectDefeat('A'));
+            defeatBOption.addEventListener('click', () => selectDefeat('B'));
+            
+            // 记录对战结果
+            recordBattleBtn.addEventListener('click', recordBattle);
+            
+            // 保存自定义玩家
+            saveCustomPlayerBtn.addEventListener('click', saveCustomPlayer);
+            customPlayerInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveCustomPlayer();
+                }
+            });
+            
+            // 保存为图片
+            saveAsImageBtn.addEventListener('click', saveAsImage);
+            
+            // 分享到微信
+            shareWechatBtn.addEventListener('click', shareToWechat);
+            
+            // 备注输入限制
+            battleNoteInput.addEventListener('input', validateNoteInput);
+        }
+        
+        // 设置对战模式
+        function setMode(mode) {
+            if (mode === '1v1') {
+                mode1v1Btn.classList.add('active');
+                mode2v2Btn.classList.remove('active');
+                playerA2Select.style.display = 'none';
+                playerB2Select.style.display = 'none';
+            } else {
+                mode1v1Btn.classList.remove('active');
+                mode2v2Btn.classList.add('active');
+                playerA2Select.style.display = 'block';
+                playerB2Select.style.display = 'block';
+            }
+        }
+        
+        // 选择战败方
+        function selectDefeat(team) {
+            defeatAOption.classList.remove('selected');
+            defeatBOption.classList.remove('selected');
+            
+            if (team === 'A') {
+                defeatAOption.classList.add('selected');
+            } else {
+                defeatBOption.classList.add('selected');
+            }
+        }
+        
+        // 验证备注输入
+        function validateNoteInput() {
+            let value = battleNoteInput.value;
+            // 只允许大写字母和数字
+            value = value.replace(/[^A-Z0-9]/g, '');
+            battleNoteInput.value = value;
+        }
+        
+        // 记录对战结果
+        function recordBattle() {
+            // 获取对战模式
+            const mode = mode1v1Btn.classList.contains('active') ? '1v1' : '2v2';
+            
+            // 获取队伍成员
+            const playerA1 = document.getElementById('playerA1').value;
+            const playerA2 = mode === '2v2' ? document.getElementById('playerA2').value : '';
+            const playerB1 = document.getElementById('playerB1').value;
+            const playerB2 = mode === '2v2' ? document.getElementById('playerB2').value : '';
+            
+            // 验证必须选择的玩家
+            if (!playerA1 || !playerB1 || (mode === '2v2' && (!playerA2 || !playerB2))) {
+                alert('请选择所有玩家！');
+                return;
+            }
+            
+            // 检查是否有重复的玩家
+            const players = [playerA1, playerA2, playerB1, playerB2].filter(p => p);
+            const uniquePlayers = [...new Set(players)];
+            if (players.length !== uniquePlayers.length) {
+                alert('不能选择相同的玩家！');
+                return;
+            }
+            
+            // 获取战败方
+            const defeatTeam = defeatAOption.classList.contains('selected') ? 'A' : 
+                              defeatBOption.classList.contains('selected') ? 'B' : null;
+            
+            if (!defeatTeam) {
+                alert('请选择战败方！');
+                return;
+            }
+            
+            // 获取备注
+            const note = battleNoteInput.value;
+            
+            // 创建对战记录
+            const battleRecord = {
+                id: Date.now(),
+                mode: mode,
+                teamA: mode === '1v1' ? [playerA1] : [playerA1, playerA2],
+                teamB: mode === '1v1' ? [playerB1] : [playerB1, playerB2],
+                defeatedTeam: defeatTeam,
+                note: note,
+                timestamp: new Date().toLocaleString('zh-CN')
+            };
+            
+            // 添加到历史记录
+            battleHistory.unshift(battleRecord);
+            
+            // 保存到本地存储
+            saveToLocalStorage();
+            
+            // 渲染历史记录
+            renderHistory();
+            
+            // 重置表单
+            battleNoteInput.value = '';
+            
+            // 显示成功消息
+            alert('对战记录已保存！');
+        }
+        
+        // 保存自定义玩家
+        function saveCustomPlayer() {
+            const playerName = customPlayerInput.value.trim();
+            
+            if (!playerName) {
+                alert('请输入玩家名称！');
+                return;
+            }
+            
+            if (playerName.length > 10) {
+                alert('玩家名称不能超过10个字符！');
+                return;
+            }
+            
+            // 查找空的自定义玩家位置
+            const emptyIndex = customPlayers.findIndex(player => player.startsWith('自定义'));
+            
+            if (emptyIndex !== -1) {
+                customPlayers[emptyIndex] = playerName;
+            } else {
+                // 如果所有自定义玩家位置都已满，替换第一个
+                customPlayers[0] = playerName;
+            }
+            
+            // 保存到本地存储
+            saveToLocalStorage();
+            
+            // 更新玩家列表和选择下拉菜单
+            renderPlayerLists();
+            initPlayerSelects();
+            
+            // 清空输入框
+            customPlayerInput.value = '';
+            
+            alert('自定义玩家已保存！');
+        }
+        
+        // 渲染历史记录
+        function renderHistory() {
+            if (battleHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-history fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>暂无对战记录</p>
+                        <p>请开始记录对战</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let historyHTML = '';
+            battleHistory.forEach(record => {
+                const teamAText = record.teamA.join(' & ');
+                const teamBText = record.teamB.join(' & ');
+                
+                historyHTML += `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'}</span>
+                            <span>${record.timestamp}</span>
+                        </div>
+                        <div class="history-details">
+                            <div><strong>A队：</strong> ${teamAText}</div>
+                            <div><strong>B队：</strong> ${teamBText}</div>
+                            <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
+                        </div>
+                        ${record.note ? `<div class="history-note"><strong>备注：</strong> ${record.note}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = historyHTML;
+        }
+        
+        // 保存为图片
+        function saveAsImage() {
+            if (battleHistory.length === 0) {
+                alert('暂无对战记录可保存！');
+                return;
+            }
+            
+            // 创建要保存的内容
+            const content = document.createElement('div');
+            content.style.backgroundColor = '#162447';
+            content.style.padding = '20px';
+            content.style.borderRadius = '12px';
+            content.style.color = '#e6e6e6';
+            content.style.width = '600px';
+            content.style.margin = '0 auto';
+            
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #4cc9f0; margin-bottom: 5px;">玩家对战记录</h1>
+                    <p style="color: #a9a9a9; font-size: 0.9rem;">生成时间: ${new Date().toLocaleString('zh-CN')}</p>
+                </div>
+                <div style="display: flex; justify-content: space-around; margin-bottom: 20px; background-color: #1f4068; padding: 15px; border-radius: 8px;">
+                    <div>
+                        <h3 style="color: #fca311; margin-bottom: 10px;">固定玩家 (7位)</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            ${fixedPlayers.map(player => `<li style="margin-bottom: 5px;">• ${player}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: #fca311; margin-bottom: 10px;">自定义玩家 (3位)</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            ${customPlayers.map(player => `<li style="margin-bottom: 5px;">• ${player}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <h2 style="color: #4cc9f0; text-align: center; margin-bottom: 20px;">对战记录 (最近5场)</h2>
+            `;
+            
+            const recentBattles = battleHistory.slice(0, 5);
+            
+            if (recentBattles.length === 0) {
+                html += `<p style="text-align: center; color: #a9a9a9; padding: 30px;">暂无对战记录</p>`;
+            } else {
+                recentBattles.forEach((record, index) => {
+                    const teamAText = record.teamA.join(' & ');
+                    const teamBText = record.teamB.join(' & ');
+                    
+                    html += `
+                        <div style="background-color: #1f4068; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #4cc9f0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #fca311; font-weight: 600;">
+                                <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'}</span>
+                                <span>${record.timestamp}</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                                <div><strong>A队：</strong> ${teamAText}</div>
+                                <div><strong>B队：</strong> ${teamBText}</div>
+                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
+                            </div>
+                            ${record.note ? `<div style="margin-top: 10px; padding: 8px; background-color: #0f3460; border-radius: 4px; font-style: italic;"><strong>备注：</strong> ${record.note}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #0f4c75; color: #a9a9a9; font-size: 0.8rem;">
+                    <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式</p>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            
+            // 使用html2canvas将内容转换为图片
+            html2canvas(content).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `对战记录_${new Date().toISOString().slice(0,10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+        
+        // 分享到微信（模拟功能）
+        function shareToWechat() {
+            if (battleHistory.length === 0) {
+                alert('暂无对战记录可分享！');
+                return;
+            }
+            
+            // 创建分享内容
+            let shareContent = "【玩家对战记录】\n\n";
+            
+            // 添加最近3场对战记录
+            const recentBattles = battleHistory.slice(0, 3);
+            recentBattles.forEach((record, index) => {
+                const teamAText = record.teamA.join(' & ');
+                const teamBText = record.teamB.join(' & ');
+                
+                shareContent += `对战${index + 1} (${record.mode}):\n`;
+                shareContent += `A队: ${teamAText}\n`;
+                shareContent += `B队: ${teamBText}\n`;
+                shareContent += `战败方: ${record.defeatedTeam}队\n`;
+                if (record.note) {
+                    shareContent += `备注: ${record.note}\n`;
+                }
+                shareContent += `时间: ${record.timestamp}\n\n`;
+            });
+            
+            shareContent += "---\n";
+            shareContent += "玩家对战记录系统\n";
+            shareContent += "固定玩家: " + fixedPlayers.join(", ") + "\n";
+            shareContent += "自定义玩家: " + customPlayers.join(", ") + "\n";
+            
+            // 在实际应用中，这里会调用微信分享API
+            // 由于微信分享需要认证的公众号，这里使用alert模拟
+            alert("分享到微信功能(模拟)\n\n分享内容已复制到剪贴板，请在微信中粘贴分享。\n\n内容预览:\n" + shareContent.substring(0, 300) + "...");
+            
+            // 复制到剪贴板
+            navigator.clipboard.writeText(shareContent).then(() => {
+                console.log("分享内容已复制到剪贴板");
+            });
+        }
+        
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('customPlayers', JSON.stringify(customPlayers));
+            localStorage.setItem('battleHistory', JSON.stringify(battleHistory));
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

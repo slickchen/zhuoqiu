@@ -216,6 +216,15 @@
             background-color: #27ae60;
         }
 
+        .btn-clear {
+            background-color: #e63946;
+            margin-top: 10px;
+        }
+
+        .btn-clear:hover {
+            background-color: #d32f2f;
+        }
+
         .player-list {
             list-style: none;
             margin-top: 15px;
@@ -283,6 +292,26 @@
             margin-bottom: 15px;
             border-radius: 8px;
             border-left: 5px solid #4cc9f0;
+            position: relative;
+        }
+
+        .delete-history-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            color: #e63946;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-history-btn:hover {
+            background-color: rgba(230, 57, 70, 0.2);
+            transform: scale(1.1);
         }
 
         .history-header {
@@ -291,6 +320,7 @@
             margin-bottom: 10px;
             color: #fca311;
             font-weight: 600;
+            padding-right: 30px;
         }
 
         .history-details {
@@ -315,6 +345,93 @@
             font-style: italic;
         }
 
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .history-controls .btn {
+            margin-top: 0;
+        }
+
+        .history-count {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #a9a9a9;
+            font-size: 0.9rem;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background-color: #162447;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .modal-content {
+            color: #e6e6e6;
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.confirm {
+            background-color: #e63946;
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background-color: #d32f2f;
+        }
+
+        .modal-btn.cancel {
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+        }
+
+        .modal-btn.cancel:hover {
+            background-color: #2ab7e9;
+        }
+
         footer {
             text-align: center;
             margin-top: 40px;
@@ -333,8 +450,16 @@
                 flex-direction: column;
             }
             
+            .history-controls {
+                flex-direction: column;
+            }
+            
             h1 {
                 font-size: 2rem;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -416,12 +541,20 @@
         <div class="section">
             <h2 class="section-title"><i class="fas fa-history"></i> 对战历史记录</h2>
             
-            <button class="btn btn-share" id="saveAsImage">
-                <i class="fas fa-image"></i> 保存记录为图片
+            <div class="history-controls">
+                <button class="btn btn-share" id="saveAsImage">
+                    <i class="fas fa-image"></i> 保存为图片
+                </button>
+                <button class="btn btn-share" id="shareWechat">
+                    <i class="fab fa-weixin"></i> 分享到微信
+                </button>
+            </div>
+            
+            <button class="btn btn-clear" id="clearHistory">
+                <i class="fas fa-trash-alt"></i> 清除所有记录
             </button>
-            <button class="btn btn-share">
-                <i class="fab fa-weixin"></i> 分享到微信
-            </button>
+            
+            <div class="history-count" id="historyCount">当前共有 0 条对战记录</div>
             
             <div id="historyList">
                 <div class="empty-history">
@@ -432,6 +565,20 @@
             </div>
         </div>
     </div>
+
+    <!-- 确认清除模态框 -->
+    <div class="modal-overlay" id="clearConfirmModal">
+        <div class="modal">
+            <h3 class="modal-title"><i class="fas fa-exclamation-triangle"></i> 确认清除</h3>
+            <div class="modal-content" id="clearConfirmMessage">
+                确定要清除所有对战记录吗？此操作不可撤销！
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="confirmClear">确定清除</button>
+                <button class="modal-btn cancel" id="cancelClear">取消</button>
+            </div>
+        </div>
+    </div>
     
     <footer>
         <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理</p>
@@ -439,7 +586,7 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // 初始固定玩家列表 - 修改为指定的7位玩家
+        // 初始固定玩家列表 - 指定的7位玩家
         const fixedPlayers = [
             "第一陈", 
             "斯提芬饭", 
@@ -472,6 +619,13 @@
         const saveCustomPlayerBtn = document.getElementById('saveCustomPlayer');
         const historyList = document.getElementById('historyList');
         const saveAsImageBtn = document.getElementById('saveAsImage');
+        const shareWechatBtn = document.getElementById('shareWechat');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const clearConfirmModal = document.getElementById('clearConfirmModal');
+        const clearConfirmMessage = document.getElementById('clearConfirmMessage');
+        const confirmClearBtn = document.getElementById('confirmClear');
+        const cancelClearBtn = document.getElementById('cancelClear');
+        const historyCount = document.getElementById('historyCount');
         
         // 初始化页面
         function initPage() {
@@ -492,6 +646,9 @@
             
             // 渲染历史记录
             renderHistory();
+            
+            // 更新历史记录计数
+            updateHistoryCount();
         }
         
         // 从本地存储加载数据
@@ -622,8 +779,23 @@
             // 保存为图片
             saveAsImageBtn.addEventListener('click', saveAsImage);
             
+            // 分享到微信
+            shareWechatBtn.addEventListener('click', shareToWechat);
+            
+            // 清除历史记录
+            clearHistoryBtn.addEventListener('click', showClearConfirm);
+            confirmClearBtn.addEventListener('click', clearAllHistory);
+            cancelClearBtn.addEventListener('click', hideClearConfirm);
+            
             // 备注输入限制
             battleNoteInput.addEventListener('input', validateNoteInput);
+            
+            // 点击模态框外部关闭
+            clearConfirmModal.addEventListener('click', (e) => {
+                if (e.target === clearConfirmModal) {
+                    hideClearConfirm();
+                }
+            });
         }
         
         // 设置对战模式
@@ -724,6 +896,9 @@
             // 渲染历史记录
             renderHistory();
             
+            // 更新历史记录计数
+            updateHistoryCount();
+            
             // 重置表单
             battleNoteInput.value = '';
             defeatAOption.classList.remove('selected');
@@ -784,14 +959,17 @@
             }
             
             let historyHTML = '';
-            battleHistory.forEach(record => {
+            battleHistory.forEach((record, index) => {
                 const teamAText = record.teamA.join(' & ');
                 const teamBText = record.teamB.join(' & ');
                 
                 historyHTML += `
-                    <div class="history-item">
+                    <div class="history-item" data-id="${record.id}">
+                        <button class="delete-history-btn" title="删除此记录" onclick="deleteSingleRecord(${record.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
                         <div class="history-header">
-                            <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'}</span>
+                            <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'} (#${index + 1})</span>
                             <span>${record.timestamp}</span>
                         </div>
                         <div class="history-details">
@@ -805,6 +983,50 @@
             });
             
             historyList.innerHTML = historyHTML;
+        }
+        
+        // 更新历史记录计数
+        function updateHistoryCount() {
+            const count = battleHistory.length;
+            historyCount.textContent = `当前共有 ${count} 条对战记录`;
+            historyCount.style.display = count > 0 ? 'block' : 'none';
+        }
+        
+        // 删除单条记录
+        function deleteSingleRecord(id) {
+            if (confirm('确定要删除这条对战记录吗？')) {
+                battleHistory = battleHistory.filter(record => record.id !== id);
+                saveToLocalStorage();
+                renderHistory();
+                updateHistoryCount();
+                alert('记录已删除！');
+            }
+        }
+        
+        // 显示清除确认模态框
+        function showClearConfirm() {
+            if (battleHistory.length === 0) {
+                alert('当前没有对战记录可清除！');
+                return;
+            }
+            
+            clearConfirmMessage.textContent = `确定要清除所有 ${battleHistory.length} 条对战记录吗？此操作不可撤销！`;
+            clearConfirmModal.style.display = 'flex';
+        }
+        
+        // 隐藏清除确认模态框
+        function hideClearConfirm() {
+            clearConfirmModal.style.display = 'none';
+        }
+        
+        // 清除所有历史记录
+        function clearAllHistory() {
+            battleHistory = [];
+            saveToLocalStorage();
+            renderHistory();
+            updateHistoryCount();
+            hideClearConfirm();
+            alert('所有对战记录已清除！');
         }
         
         // 保存为图片
@@ -853,6 +1075,47 @@
                 link.download = `对战记录_${new Date().toISOString().slice(0,10)}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
+            });
+        }
+        
+        // 分享到微信（模拟功能）
+        function shareToWechat() {
+            if (battleHistory.length === 0) {
+                alert('暂无对战记录可分享！');
+                return;
+            }
+            
+            // 创建分享内容
+            let shareContent = "【玩家对战记录】\n\n";
+            
+            // 添加最近3场对战记录
+            const recentBattles = battleHistory.slice(0, 3);
+            recentBattles.forEach((record, index) => {
+                const teamAText = record.teamA.join(' & ');
+                const teamBText = record.teamB.join(' & ');
+                
+                shareContent += `对战${index + 1} (${record.mode}):\n`;
+                shareContent += `A队: ${teamAText}\n`;
+                shareContent += `B队: ${teamBText}\n`;
+                shareContent += `战败方: ${record.defeatedTeam}队\n`;
+                if (record.note) {
+                    shareContent += `备注: ${record.note}\n`;
+                }
+                shareContent += `时间: ${record.timestamp}\n\n`;
+            });
+            
+            shareContent += "---\n";
+            shareContent += "玩家对战记录系统\n";
+            shareContent += "固定玩家: " + fixedPlayers.join(", ") + "\n";
+            shareContent += "自定义玩家: " + customPlayers.join(", ") + "\n";
+            
+            // 在实际应用中，这里会调用微信分享API
+            // 由于微信分享需要认证的公众号，这里使用alert模拟
+            alert("分享到微信功能(模拟)\n\n分享内容已复制到剪贴板，请在微信中粘贴分享。\n\n内容预览:\n" + shareContent.substring(0, 300) + "...");
+            
+            // 复制到剪贴板
+            navigator.clipboard.writeText(shareContent).then(() => {
+                console.log("分享内容已复制到剪贴板");
             });
         }
         

@@ -159,10 +159,6 @@
             cursor: pointer;
             text-align: center;
             transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
 
         .defeat-option:hover {
@@ -172,21 +168,6 @@
         .defeat-option.selected {
             background-color: #e63946;
             border-color: #e63946;
-        }
-
-        .defeat-option .team-label {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .defeat-option .player-name {
-            font-size: 0.9rem;
-            color: #f8f8f8;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         .input-note {
@@ -398,14 +379,8 @@
             <div class="form-group">
                 <label class="form-label">选择战败方：</label>
                 <div class="defeat-selector">
-                    <div class="defeat-option" id="defeatA">
-                        <div class="team-label">A队</div>
-                        <div class="player-name" id="defeatAPlayer">(未选择)</div>
-                    </div>
-                    <div class="defeat-option" id="defeatB">
-                        <div class="team-label">B队</div>
-                        <div class="player-name" id="defeatBPlayer">(未选择)</div>
-                    </div>
+                    <div class="defeat-option" id="defeatA">A队</div>
+                    <div class="defeat-option" id="defeatB">B队</div>
                 </div>
             </div>
             
@@ -484,14 +459,10 @@
         // DOM元素
         const mode1v1Btn = document.getElementById('mode1v1');
         const mode2v2Btn = document.getElementById('mode2v2');
-        const playerA1Select = document.getElementById('playerA1');
         const playerA2Select = document.getElementById('playerA2');
-        const playerB1Select = document.getElementById('playerB1');
         const playerB2Select = document.getElementById('playerB2');
         const defeatAOption = document.getElementById('defeatA');
         const defeatBOption = document.getElementById('defeatB');
-        const defeatAPlayerName = document.getElementById('defeatAPlayer');
-        const defeatBPlayerName = document.getElementById('defeatBPlayer');
         const battleNoteInput = document.getElementById('battleNote');
         const recordBattleBtn = document.getElementById('recordBattle');
         const fixedPlayersList = document.getElementById('fixedPlayers');
@@ -520,9 +491,6 @@
             // 设置默认战败方
             selectDefeat('A');
             
-            // 更新战败方显示的玩家名称
-            updateDefeatPlayerNames();
-            
             // 设置事件监听器
             setupEventListeners();
             
@@ -548,10 +516,10 @@
         function initPlayerSelects() {
             const allPlayers = [...fixedPlayers, ...customPlayers];
             const playerSelects = [
-                playerA1Select,
-                playerA2Select,
-                playerB1Select,
-                playerB2Select
+                document.getElementById('playerA1'),
+                document.getElementById('playerA2'),
+                document.getElementById('playerB1'),
+                document.getElementById('playerB2')
             ];
             
             // 清空所有选项（除了第一个占位选项）
@@ -573,8 +541,8 @@
             
             // 设置默认选择
             if (allPlayers.length >= 2) {
-                playerA1Select.value = allPlayers[0];
-                playerB1Select.value = allPlayers[1];
+                document.getElementById('playerA1').value = allPlayers[0];
+                document.getElementById('playerB1').value = allPlayers[1];
             }
         }
         
@@ -635,12 +603,6 @@
             defeatAOption.addEventListener('click', () => selectDefeat('A'));
             defeatBOption.addEventListener('click', () => selectDefeat('B'));
             
-            // 玩家选择变化时更新战败方显示的玩家名称
-            playerA1Select.addEventListener('change', updateDefeatPlayerNames);
-            playerA2Select.addEventListener('change', updateDefeatPlayerNames);
-            playerB1Select.addEventListener('change', updateDefeatPlayerNames);
-            playerB2Select.addEventListener('change', updateDefeatPlayerNames);
-            
             // 记录对战结果
             recordBattleBtn.addEventListener('click', recordBattle);
             
@@ -675,7 +637,6 @@
                 playerA2Select.style.display = 'block';
                 playerB2Select.style.display = 'block';
             }
-            updateDefeatPlayerNames();
         }
         
         // 选择战败方
@@ -688,33 +649,6 @@
             } else {
                 defeatBOption.classList.add('selected');
             }
-        }
-        
-        // 更新战败方显示的玩家名称
-        function updateDefeatPlayerNames() {
-            const mode = mode1v1Btn.classList.contains('active') ? '1v1' : '2v2';
-            
-            // 获取A队玩家
-            const playerA1 = playerA1Select.value;
-            const playerA2 = mode === '2v2' ? playerA2Select.value : '';
-            
-            // 获取B队玩家
-            const playerB1 = playerB1Select.value;
-            const playerB2 = mode === '2v2' ? playerB2Select.value : '';
-            
-            // 更新A队显示
-            let aTeamPlayers = playerA1;
-            if (mode === '2v2' && playerA2) {
-                aTeamPlayers = playerA1 && playerA2 ? `${playerA1} & ${playerA2}` : playerA1 || playerA2;
-            }
-            defeatAPlayerName.textContent = aTeamPlayers || '(未选择)';
-            
-            // 更新B队显示
-            let bTeamPlayers = playerB1;
-            if (mode === '2v2' && playerB2) {
-                bTeamPlayers = playerB1 && playerB2 ? `${playerB1} & ${playerB2}` : playerB1 || playerB2;
-            }
-            defeatBPlayerName.textContent = bTeamPlayers || '(未选择)';
         }
         
         // 验证备注输入
@@ -731,10 +665,10 @@
             const mode = mode1v1Btn.classList.contains('active') ? '1v1' : '2v2';
             
             // 获取队伍成员
-            const playerA1 = playerA1Select.value;
-            const playerA2 = mode === '2v2' ? playerA2Select.value : '';
-            const playerB1 = playerB1Select.value;
-            const playerB2 = mode === '2v2' ? playerB2Select.value : '';
+            const playerA1 = document.getElementById('playerA1').value;
+            const playerA2 = mode === '2v2' ? document.getElementById('playerA2').value : '';
+            const playerB1 = document.getElementById('playerB1').value;
+            const playerB2 = mode === '2v2' ? document.getElementById('playerB2').value : '';
             
             // 验证必须选择的玩家
             if (!playerA1 || !playerB1 || (mode === '2v2' && (!playerA2 || !playerB2))) {
@@ -762,14 +696,6 @@
             // 获取备注
             const note = battleNoteInput.value;
             
-            // 确定战败方玩家名称（显示用）
-            let defeatedPlayers = '';
-            if (defeatTeam === 'A') {
-                defeatedPlayers = mode === '1v1' ? playerA1 : `${playerA1} & ${playerA2}`;
-            } else {
-                defeatedPlayers = mode === '1v1' ? playerB1 : `${playerB1} & ${playerB2}`;
-            }
-            
             // 创建对战记录
             const battleRecord = {
                 id: Date.now(),
@@ -777,7 +703,6 @@
                 teamA: mode === '1v1' ? [playerA1] : [playerA1, playerA2],
                 teamB: mode === '1v1' ? [playerB1] : [playerB1, playerB2],
                 defeatedTeam: defeatTeam,
-                defeatedPlayers: defeatedPlayers, // 新增：战败方玩家名称
                 note: note,
                 timestamp: new Date().toLocaleString('zh-CN')
             };
@@ -828,7 +753,6 @@
             // 更新玩家列表和选择下拉菜单
             renderPlayerLists();
             initPlayerSelects();
-            updateDefeatPlayerNames();
             
             // 清空输入框
             customPlayerInput.value = '';
@@ -863,7 +787,7 @@
                         <div class="history-details">
                             <div><strong>A队：</strong> ${teamAText}</div>
                             <div><strong>B队：</strong> ${teamBText}</div>
-                            <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedPlayers}</span></div>
+                            <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
                         </div>
                         ${record.note ? `<div class="history-note"><strong>备注：</strong> ${record.note}</div>` : ''}
                     </div>
@@ -929,7 +853,7 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
                                 <div><strong>A队：</strong> ${teamAText}</div>
                                 <div><strong>B队：</strong> ${teamBText}</div>
-                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedPlayers}</span></div>
+                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
                             </div>
                             ${record.note ? `<div style="margin-top: 10px; padding: 8px; background-color: #0f3460; border-radius: 4px; font-style: italic;"><strong>备注：</strong> ${record.note}</div>` : ''}
                         </div>
@@ -973,7 +897,7 @@
                 shareContent += `对战${index + 1} (${record.mode}):\n`;
                 shareContent += `A队: ${teamAText}\n`;
                 shareContent += `B队: ${teamBText}\n`;
-                shareContent += `战败方: ${record.defeatedPlayers}\n`;
+                shareContent += `战败方: ${record.defeatedTeam}队\n`;
                 if (record.note) {
                     shareContent += `备注: ${record.note}\n`;
                 }
@@ -997,4 +921,12 @@
         
         // 保存到本地存储
         function saveToLocalStorage() {
-            localStorage.setItem('
+            localStorage.setItem('customPlayers', JSON.stringify(customPlayers));
+            localStorage.setItem('battleHistory', JSON.stringify(battleHistory));
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

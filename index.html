@@ -385,9 +385,9 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label">战败备注（可输入大写字母/数字 A-Z/0-9）：</label>
-                <input type="text" class="input-note" id="battleNote" placeholder="例：A1、B5、X9 等" maxlength="10">
-                <div class="char-count">仅支持大写英文字母（A-Z）和数字（0-9），最多10个字符</div>
+                <label class="form-label">战败备注（仅支持大写字母 A-Z）：</label>
+                <input type="text" class="input-note" id="battleNote" placeholder="例：A、B、WIN、LOSE 等" maxlength="10">
+                <div class="char-count">仅支持大写英文字母（A-Z），最多10个字符</div>
             </div>
             
             <button class="btn" id="recordBattle">
@@ -419,7 +419,7 @@
             <button class="btn btn-share" id="saveAsImage">
                 <i class="fas fa-image"></i> 保存记录为图片
             </button>
-            <button class="btn btn-share" id="shareWechat">
+            <button class="btn btn-share">
                 <i class="fab fa-weixin"></i> 分享到微信
             </button>
             
@@ -439,7 +439,7 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // 初始固定玩家列表 - 使用指定的7位玩家
+        // 初始固定玩家列表 - 修改为指定的7位玩家
         const fixedPlayers = [
             "第一陈", 
             "斯提芬饭", 
@@ -472,7 +472,6 @@
         const saveCustomPlayerBtn = document.getElementById('saveCustomPlayer');
         const historyList = document.getElementById('historyList');
         const saveAsImageBtn = document.getElementById('saveAsImage');
-        const shareWechatBtn = document.getElementById('shareWechat');
         
         // 初始化页面
         function initPage() {
@@ -487,9 +486,6 @@
             
             // 设置默认对战模式
             setMode('1v1');
-            
-            // 设置默认战败方
-            selectDefeat('A');
             
             // 设置事件监听器
             setupEventListeners();
@@ -554,11 +550,14 @@
             allPlayersList.innerHTML = '';
             
             // 渲染固定玩家
-            fixedPlayers.forEach(player => {
+            fixedPlayers.forEach((player, index) => {
                 const li = document.createElement('li');
                 li.className = 'player-item';
                 li.innerHTML = `
-                    <span class="player-name">${player}</span>
+                    <div>
+                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 1}.</span>
+                        <span class="player-name">${player}</span>
+                    </div>
                     <span class="player-type fixed">固定</span>
                 `;
                 fixedPlayersList.appendChild(li);
@@ -569,8 +568,11 @@
                 const li = document.createElement('li');
                 li.className = 'player-item';
                 li.innerHTML = `
-                    <span class="player-name">${player}</span>
-                    <span class="player-type custom">自定义 ${index + 1}</span>
+                    <div>
+                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 8}.</span>
+                        <span class="player-name">${player}</span>
+                    </div>
+                    <span class="player-type custom">自定义</span>
                 `;
                 customPlayersList.appendChild(li);
             });
@@ -586,7 +588,10 @@
                     `<span class="player-type custom">自定义</span>`;
                 
                 li.innerHTML = `
-                    <span class="player-name">${player}</span>
+                    <div>
+                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 1}.</span>
+                        <span class="player-name">${player}</span>
+                    </div>
                     ${playerType}
                 `;
                 allPlayersList.appendChild(li);
@@ -616,9 +621,6 @@
             
             // 保存为图片
             saveAsImageBtn.addEventListener('click', saveAsImage);
-            
-            // 分享到微信
-            shareWechatBtn.addEventListener('click', shareToWechat);
             
             // 备注输入限制
             battleNoteInput.addEventListener('input', validateNoteInput);
@@ -651,11 +653,11 @@
             }
         }
         
-        // 验证备注输入
+        // 验证备注输入 - 只允许大写字母A-Z，不允许数字0-9
         function validateNoteInput() {
             let value = battleNoteInput.value;
-            // 只允许大写字母和数字
-            value = value.replace(/[^A-Z0-9]/g, '');
+            // 只允许大写字母A-Z，不允许数字
+            value = value.replace(/[^A-Z]/g, '');
             battleNoteInput.value = value;
         }
         
@@ -693,8 +695,14 @@
                 return;
             }
             
-            // 获取备注
+            // 获取备注并验证格式 - 只允许大写字母，不允许数字
             const note = battleNoteInput.value;
+            // 验证备注只包含大写字母
+            const notePattern = /^[A-Z]{0,10}$/;
+            if (note && !notePattern.test(note)) {
+                alert('备注只能包含大写字母（A-Z），最多10个字符！');
+                return;
+            }
             
             // 创建对战记录
             const battleRecord = {
@@ -718,6 +726,8 @@
             
             // 重置表单
             battleNoteInput.value = '';
+            defeatAOption.classList.remove('selected');
+            defeatBOption.classList.remove('selected');
             
             // 显示成功消息
             alert('对战记录已保存！');
@@ -810,37 +820,11 @@
             content.style.padding = '20px';
             content.style.borderRadius = '12px';
             content.style.color = '#e6e6e6';
-            content.style.width = '600px';
-            content.style.margin = '0 auto';
             
-            let html = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h1 style="color: #4cc9f0; margin-bottom: 5px;">玩家对战记录</h1>
-                    <p style="color: #a9a9a9; font-size: 0.9rem;">生成时间: ${new Date().toLocaleString('zh-CN')}</p>
-                </div>
-                <div style="display: flex; justify-content: space-around; margin-bottom: 20px; background-color: #1f4068; padding: 15px; border-radius: 8px;">
-                    <div>
-                        <h3 style="color: #fca311; margin-bottom: 10px;">固定玩家 (7位)</h3>
-                        <ul style="list-style: none; padding: 0;">
-                            ${fixedPlayers.map(player => `<li style="margin-bottom: 5px;">• ${player}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 style="color: #fca311; margin-bottom: 10px;">自定义玩家 (3位)</h3>
-                        <ul style="list-style: none; padding: 0;">
-                            ${customPlayers.map(player => `<li style="margin-bottom: 5px;">• ${player}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-                <h2 style="color: #4cc9f0; text-align: center; margin-bottom: 20px;">对战记录 (最近5场)</h2>
-            `;
+            let html = '<h2 style="color: #4cc9f0; text-align: center; margin-bottom: 20px;">对战记录</h2>';
             
-            const recentBattles = battleHistory.slice(0, 5);
-            
-            if (recentBattles.length === 0) {
-                html += `<p style="text-align: center; color: #a9a9a9; padding: 30px;">暂无对战记录</p>`;
-            } else {
-                recentBattles.forEach((record, index) => {
+            battleHistory.forEach((record, index) => {
+                if (index < 5) { // 只保存最近5条记录
                     const teamAText = record.teamA.join(' & ');
                     const teamBText = record.teamB.join(' & ');
                     
@@ -858,14 +842,8 @@
                             ${record.note ? `<div style="margin-top: 10px; padding: 8px; background-color: #0f3460; border-radius: 4px; font-style: italic;"><strong>备注：</strong> ${record.note}</div>` : ''}
                         </div>
                     `;
-                });
-            }
-            
-            html += `
-                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #0f4c75; color: #a9a9a9; font-size: 0.8rem;">
-                    <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式</p>
-                </div>
-            `;
+                }
+            });
             
             content.innerHTML = html;
             
@@ -875,47 +853,6 @@
                 link.download = `对战记录_${new Date().toISOString().slice(0,10)}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-            });
-        }
-        
-        // 分享到微信（模拟功能）
-        function shareToWechat() {
-            if (battleHistory.length === 0) {
-                alert('暂无对战记录可分享！');
-                return;
-            }
-            
-            // 创建分享内容
-            let shareContent = "【玩家对战记录】\n\n";
-            
-            // 添加最近3场对战记录
-            const recentBattles = battleHistory.slice(0, 3);
-            recentBattles.forEach((record, index) => {
-                const teamAText = record.teamA.join(' & ');
-                const teamBText = record.teamB.join(' & ');
-                
-                shareContent += `对战${index + 1} (${record.mode}):\n`;
-                shareContent += `A队: ${teamAText}\n`;
-                shareContent += `B队: ${teamBText}\n`;
-                shareContent += `战败方: ${record.defeatedTeam}队\n`;
-                if (record.note) {
-                    shareContent += `备注: ${record.note}\n`;
-                }
-                shareContent += `时间: ${record.timestamp}\n\n`;
-            });
-            
-            shareContent += "---\n";
-            shareContent += "玩家对战记录系统\n";
-            shareContent += "固定玩家: " + fixedPlayers.join(", ") + "\n";
-            shareContent += "自定义玩家: " + customPlayers.join(", ") + "\n";
-            
-            // 在实际应用中，这里会调用微信分享API
-            // 由于微信分享需要认证的公众号，这里使用alert模拟
-            alert("分享到微信功能(模拟)\n\n分享内容已复制到剪贴板，请在微信中粘贴分享。\n\n内容预览:\n" + shareContent.substring(0, 300) + "...");
-            
-            // 复制到剪贴板
-            navigator.clipboard.writeText(shareContent).then(() => {
-                console.log("分享内容已复制到剪贴板");
             });
         }
         

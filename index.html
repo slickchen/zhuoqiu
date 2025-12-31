@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>玩家对战记录系统</title>
+    <title>简洁对战记录系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.css">
     <style>
         * {
             margin: 0;
@@ -19,7 +18,7 @@
             color: #e6e6e6;
             line-height: 1.6;
             padding: 20px;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -32,49 +31,13 @@
 
         h1 {
             color: #4cc9f0;
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin-bottom: 10px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-        }
-
-        .subtitle {
-            color: #a9a9a9;
-            font-size: 1.1rem;
-        }
-
-        .connection-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            background-color: #1f4068;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-connected {
-            background-color: #2ecc71;
-            box-shadow: 0 0 10px #2ecc71;
-        }
-
-        .status-disconnected {
-            background-color: #e63946;
-            box-shadow: 0 0 10px #e63946;
         }
 
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
-            margin-bottom: 30px;
         }
 
         .section {
@@ -82,11 +45,6 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
         }
 
         .section-title {
@@ -97,11 +55,22 @@
             font-size: 1.4rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between;
         }
 
-        .section-title i {
-            font-size: 1.2rem;
+        .section-title .toggle-btn {
+            background-color: #1f4068;
+            border: 2px solid #0f4c75;
+            color: #e6e6e6;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .section-title .toggle-btn:hover {
+            background-color: #0f4c75;
         }
 
         .mode-selector {
@@ -163,19 +132,10 @@
             margin-bottom: 5px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #a9a9a9;
-        }
-
         .defeat-selector {
             display: flex;
             gap: 15px;
+            margin-bottom: 20px;
         }
 
         .defeat-option {
@@ -207,6 +167,7 @@
             border: 1px solid #4cc9f0;
             border-radius: 6px;
             font-size: 1rem;
+            margin-bottom: 5px;
         }
 
         .char-count {
@@ -233,43 +194,22 @@
 
         .btn:hover {
             background-color: #2ab7e9;
-            transform: translateY(-2px);
         }
 
-        .btn-share {
-            background-color: #2ecc71;
-            margin-top: 15px;
-        }
-
-        .btn-share:hover {
-            background-color: #27ae60;
-        }
-
-        .btn-clear {
-            background-color: #e63946;
-            margin-top: 10px;
-        }
-
-        .btn-clear:hover {
-            background-color: #d32f2f;
-        }
-
-        .btn-generate {
+        .btn-view-history {
             background-color: #9b59b6;
-            margin-top: 10px;
         }
 
-        .btn-generate:hover {
+        .btn-view-history:hover {
             background-color: #8e44ad;
         }
 
-        .btn-realtime {
-            background-color: #f39c12;
-            margin-top: 10px;
+        .btn-clear-history {
+            background-color: #e63946;
         }
 
-        .btn-realtime:hover {
-            background-color: #e67e22;
+        .btn-clear-history:hover {
+            background-color: #d32f2f;
         }
 
         .player-list {
@@ -295,7 +235,6 @@
             font-size: 0.8rem;
             padding: 3px 8px;
             border-radius: 10px;
-            background-color: #0f4c75;
         }
 
         .player-type.fixed {
@@ -333,51 +272,41 @@
             font-weight: 600;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background-color: #e63946;
+        }
+
+        .notification.info {
+            background-color: #4cc9f0;
+        }
+
         .history-item {
             background-color: #1f4068;
             padding: 15px;
             margin-bottom: 15px;
             border-radius: 8px;
             border-left: 5px solid #4cc9f0;
-            position: relative;
-        }
-
-        .realtime-indicator {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #f39c12;
-            color: #1a1a2e;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
-        }
-
-        .delete-history-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: transparent;
-            color: #e63946;
-            border: none;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 5px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .delete-history-btn:hover {
-            background-color: rgba(230, 57, 70, 0.2);
-            transform: scale(1.1);
         }
 
         .history-header {
@@ -386,12 +315,11 @@
             margin-bottom: 10px;
             color: #fca311;
             font-weight: 600;
-            padding-right: 30px;
         }
 
         .history-details {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             font-size: 0.9rem;
         }
@@ -411,127 +339,11 @@
             font-style: italic;
         }
 
-        .history-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .history-controls .btn {
-            margin-top: 0;
-            flex: 1;
-            min-width: 150px;
-        }
-
         .history-count {
             text-align: center;
             margin-bottom: 15px;
             color: #a9a9a9;
             font-size: 0.9rem;
-        }
-
-        .realtime-info {
-            background-color: #1f4068;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 5px solid #f39c12;
-        }
-
-        .realtime-info h3 {
-            color: #fca311;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .realtime-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 10px;
-            background-color: #0f3460;
-            border-radius: 6px;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #4cc9f0;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #a9a9a9;
-            margin-top: 5px;
-        }
-
-        .share-section {
-            background-color: #1f4068;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .share-link-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .share-link {
-            flex: 1;
-            padding: 10px;
-            background-color: #0f3460;
-            color: #e6e6e6;
-            border: 1px solid #4cc9f0;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-
-        .copy-btn {
-            padding: 10px 15px;
-            background-color: #4cc9f0;
-            color: #1a1a2e;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .copy-btn:hover {
-            background-color: #2ab7e9;
-        }
-
-        .qrcode-container {
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-            display: inline-block;
-        }
-
-        .qrcode-label {
-            margin-bottom: 10px;
-            color: #1a1a2e;
-            font-weight: 600;
-        }
-
-        .share-info {
-            margin-top: 15px;
-            color: #a9a9a9;
-            font-size: 0.9rem;
-            text-align: center;
         }
 
         .modal-overlay {
@@ -552,7 +364,9 @@
             padding: 30px;
             border-radius: 12px;
             width: 90%;
-            max-width: 500px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
@@ -563,17 +377,11 @@
             font-size: 1.5rem;
         }
 
-        .modal-content {
-            color: #e6e6e6;
-            margin-bottom: 25px;
-            text-align: center;
-            line-height: 1.6;
-        }
-
         .modal-buttons {
             display: flex;
             gap: 15px;
             justify-content: center;
+            margin-top: 20px;
         }
 
         .modal-btn {
@@ -604,35 +412,6 @@
             background-color: #2ab7e9;
         }
 
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background-color: #2ecc71;
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transform: translateX(150%);
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.error {
-            background-color: #e63946;
-        }
-
-        .notification.info {
-            background-color: #4cc9f0;
-        }
-
         footer {
             text-align: center;
             margin-top: 40px;
@@ -643,44 +422,29 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            
             .mode-selector, .defeat-selector {
                 flex-direction: column;
             }
             
-            .history-controls {
+            .custom-player-input {
                 flex-direction: column;
             }
             
-            .share-link-container {
-                flex-direction: column;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .modal-buttons {
-                flex-direction: column;
-            }
-            
-            .realtime-stats {
+            .history-details {
                 grid-template-columns: 1fr;
+            }
+            
+            .modal {
+                width: 95%;
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1><i class="fas fa-gamepad"></i> 玩家对战记录系统</h1>
-        <p class="subtitle">支持1v1 / 2v2对战模式，记录战败方及备注信息</p>
-        <div class="connection-status" id="connectionStatus">
-            <span class="status-dot status-disconnected" id="statusDot"></span>
-            <span id="statusText">正在连接实时服务器...</span>
-        </div>
+        <h1><i class="fas fa-gamepad"></i> 简洁对战记录系统</h1>
+        <p>支持1v1 / 2v2对战模式，可查看历史记录</p>
     </header>
 
     <div class="container">
@@ -714,109 +478,54 @@
                 </div>
             </div>
             
-            <div class="form-group">
-                <label class="form-label">选择战败方：</label>
-                <div class="defeat-selector">
-                    <div class="defeat-option" id="defeatA">A队</div>
-                    <div class="defeat-option" id="defeatB">B队</div>
-                </div>
+            <div class="defeat-selector">
+                <div class="defeat-option" id="defeatA">A队战败</div>
+                <div class="defeat-option" id="defeatB">B队战败</div>
             </div>
             
-            <div class="form-group">
-                <label class="form-label">战败备注（仅支持大写字母 A-Z）：</label>
-                <input type="text" class="input-note" id="battleNote" placeholder="例：A、B、WIN、LOSE 等" maxlength="10">
+            <div>
+                <input type="text" class="input-note" id="battleNote" placeholder="备注（仅支持大写字母 A-Z）" maxlength="10">
                 <div class="char-count">仅支持大写英文字母（A-Z），最多10个字符</div>
             </div>
             
             <button class="btn" id="recordBattle">
                 <i class="fas fa-save"></i> 记录对战结果
             </button>
-        </div>
-        
-        <div class="section">
-            <h2 class="section-title"><i class="fas fa-users"></i> 玩家管理（共10位）</h2>
             
-            <h3>固定玩家（7位，不可修改）：</h3>
-            <ul class="player-list" id="fixedPlayers"></ul>
-            
-            <h3>自定义玩家（3位，可修改）：</h3>
-            <ul class="player-list" id="customPlayers"></ul>
-            
-            <div class="custom-player-input">
-                <input type="text" id="customPlayerInput" placeholder="输入自定义玩家名称">
-                <button id="saveCustomPlayer">保存</button>
-            </div>
-            
-            <h3 style="margin-top: 20px;">所有可用玩家（10位）：</h3>
-            <ul class="player-list" id="allPlayers"></ul>
-        </div>
-        
-        <div class="section">
-            <h2 class="section-title"><i class="fas fa-history"></i> 对战历史记录</h2>
-            
-            <div class="history-controls">
-                <button class="btn btn-share" id="saveAsImage">
-                    <i class="fas fa-image"></i> 保存为图片
-                </button>
-                <button class="btn btn-share" id="shareWechat">
-                    <i class="fab fa-weixin"></i> 分享到微信
-                </button>
-                <button class="btn btn-generate" id="generateShare">
-                    <i class="fas fa-share-alt"></i> 生成共享链接
-                </button>
-                <button class="btn btn-realtime" id="enableRealtime">
-                    <i class="fas fa-sync-alt"></i> 启用实时同步
-                </button>
-            </div>
-            
-            <button class="btn btn-clear" id="clearHistory">
-                <i class="fas fa-trash-alt"></i> 清除所有记录
+            <button class="btn btn-view-history" id="viewHistory">
+                <i class="fas fa-history"></i> 查看对战记录
             </button>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">
+                <span><i class="fas fa-users"></i> 玩家列表</span>
+                <button class="toggle-btn" id="togglePlayers">
+                    <i class="fas fa-eye-slash"></i> 隐藏列表
+                </button>
+            </h2>
             
-            <!-- 实时统计信息 -->
-            <div class="realtime-info" id="realtimeInfo" style="display: none;">
-                <h3><i class="fas fa-broadcast-tower"></i> 实时同步统计</h3>
-                <div class="realtime-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="onlineUsers">0</div>
-                        <div class="stat-label">在线用户</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalBattles">0</div>
-                        <div class="stat-label">总对战数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="realtimeUpdates">0</div>
-                        <div class="stat-label">实时更新</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="lastUpdate">0s</div>
-                        <div class="stat-label">最后更新</div>
-                    </div>
+            <div id="playersContent">
+                <h3>固定玩家（7位）：</h3>
+                <ul class="player-list" id="fixedPlayers"></ul>
+                
+                <h3>自定义玩家（可添加3位）：</h3>
+                <ul class="player-list" id="customPlayers"></ul>
+                
+                <div class="custom-player-input">
+                    <input type="text" id="customPlayerInput" placeholder="输入自定义玩家名称">
+                    <button id="saveCustomPlayer">添加</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 历史记录模态框 -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <h3 class="modal-title"><i class="fas fa-history"></i> 对战历史记录</h3>
             
             <div class="history-count" id="historyCount">当前共有 0 条对战记录</div>
-            
-            <!-- 共享链接区域 -->
-            <div class="share-section" id="shareSection" style="display: none;">
-                <h3 style="color: #fca311; margin-bottom: 15px;">
-                    <i class="fas fa-link"></i> 共享对战记录
-                </h3>
-                <div class="share-link-container">
-                    <input type="text" class="share-link" id="shareLink" readonly>
-                    <button class="copy-btn" id="copyLinkBtn">
-                        <i class="far fa-copy"></i> 复制链接
-                    </button>
-                </div>
-                <div style="text-align: center;">
-                    <div id="qrcode"></div>
-                </div>
-                <div class="share-info">
-                    <p><i class="fas fa-info-circle"></i> 将此链接或二维码分享给其他人，他们可以查看完整的对战历史记录</p>
-                    <p>链接有效期：永久有效（数据存储在本地）</p>
-                </div>
-            </div>
             
             <div id="historyList">
                 <div class="empty-history">
@@ -824,6 +533,11 @@
                     <p>暂无对战记录</p>
                     <p>请开始记录对战</p>
                 </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="closeHistory">关闭</button>
+                <button class="modal-btn confirm" id="clearHistory">清除所有记录</button>
             </div>
         </div>
     </div>
@@ -842,35 +556,6 @@
         </div>
     </div>
 
-    <!-- 实时同步房间模态框 -->
-    <div class="modal-overlay" id="realtimeModal">
-        <div class="modal">
-            <h3 class="modal-title"><i class="fas fa-broadcast-tower"></i> 实时同步房间</h3>
-            <div class="modal-content">
-                <p>创建一个实时同步房间，让其他人可以实时查看对战记录。</p>
-                <div style="margin: 20px 0;">
-                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">房间名称（可选）</label>
-                    <input type="text" id="roomName" class="input-note" placeholder="例如：王者之战房间" style="width: 100%;">
-                </div>
-                <div style="margin: 20px 0;">
-                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">房间密码（可选）</label>
-                    <input type="text" id="roomPassword" class="input-note" placeholder="设置访问密码" style="width: 100%;">
-                </div>
-                <div id="roomLinkContainer" style="display: none; margin-top: 20px;">
-                    <label style="display: block; margin-bottom: 8px; color: #a9a9a9;">实时房间链接</label>
-                    <input type="text" id="roomLink" class="share-link" readonly>
-                    <button class="copy-btn" id="copyRoomLinkBtn" style="margin-top: 10px;">
-                        <i class="far fa-copy"></i> 复制房间链接
-                    </button>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" id="cancelRealtime">取消</button>
-                <button class="modal-btn confirm" id="createRealtimeRoom">创建房间</button>
-            </div>
-        </div>
-    </div>
-    
     <!-- 通知 -->
     <div class="notification" id="notification">
         <i class="fas fa-info-circle"></i>
@@ -878,11 +563,9 @@
     </div>
     
     <footer>
-        <p>玩家对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式，10位玩家管理 | 实时同步功能</p>
+        <p>简洁对战记录系统 &copy; 2023 | 支持1v1 / 2v2对战模式</p>
     </footer>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // 初始固定玩家列表 - 指定的7位玩家
         const fixedPlayers = [
@@ -901,18 +584,6 @@
         // 对战历史记录
         let battleHistory = [];
         
-        // 共享链接
-        let shareLink = '';
-        let qrcode = null;
-        
-        // 实时同步相关
-        let socket = null;
-        let isRealtimeEnabled = false;
-        let roomId = null;
-        let onlineUsers = 0;
-        let realtimeUpdates = 0;
-        let lastUpdateTime = null;
-        
         // DOM元素
         const mode1v1Btn = document.getElementById('mode1v1');
         const mode2v2Btn = document.getElementById('mode2v2');
@@ -922,44 +593,26 @@
         const defeatBOption = document.getElementById('defeatB');
         const battleNoteInput = document.getElementById('battleNote');
         const recordBattleBtn = document.getElementById('recordBattle');
+        const viewHistoryBtn = document.getElementById('viewHistory');
         const fixedPlayersList = document.getElementById('fixedPlayers');
         const customPlayersList = document.getElementById('customPlayers');
-        const allPlayersList = document.getElementById('allPlayers');
         const customPlayerInput = document.getElementById('customPlayerInput');
         const saveCustomPlayerBtn = document.getElementById('saveCustomPlayer');
+        const togglePlayersBtn = document.getElementById('togglePlayers');
+        const playersContent = document.getElementById('playersContent');
+        const historyModal = document.getElementById('historyModal');
         const historyList = document.getElementById('historyList');
-        const saveAsImageBtn = document.getElementById('saveAsImage');
-        const shareWechatBtn = document.getElementById('shareWechat');
-        const generateShareBtn = document.getElementById('generateShare');
-        const enableRealtimeBtn = document.getElementById('enableRealtime');
+        const historyCount = document.getElementById('historyCount');
+        const closeHistoryBtn = document.getElementById('closeHistory');
         const clearHistoryBtn = document.getElementById('clearHistory');
         const clearConfirmModal = document.getElementById('clearConfirmModal');
-        const clearConfirmMessage = document.getElementById('clearConfirmMessage');
         const confirmClearBtn = document.getElementById('confirmClear');
         const cancelClearBtn = document.getElementById('cancelClear');
-        const historyCount = document.getElementById('historyCount');
-        const shareSection = document.getElementById('shareSection');
-        const shareLinkInput = document.getElementById('shareLink');
-        const copyLinkBtn = document.getElementById('copyLinkBtn');
-        const qrcodeContainer = document.getElementById('qrcode');
-        const connectionStatus = document.getElementById('connectionStatus');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        const realtimeInfo = document.getElementById('realtimeInfo');
-        const onlineUsersEl = document.getElementById('onlineUsers');
-        const totalBattlesEl = document.getElementById('totalBattles');
-        const realtimeUpdatesEl = document.getElementById('realtimeUpdates');
-        const lastUpdateEl = document.getElementById('lastUpdate');
-        const realtimeModal = document.getElementById('realtimeModal');
-        const roomNameInput = document.getElementById('roomName');
-        const roomPasswordInput = document.getElementById('roomPassword');
-        const roomLinkContainer = document.getElementById('roomLinkContainer');
-        const roomLinkInput = document.getElementById('roomLink');
-        const copyRoomLinkBtn = document.getElementById('copyRoomLinkBtn');
-        const createRealtimeRoomBtn = document.getElementById('createRealtimeRoom');
-        const cancelRealtimeBtn = document.getElementById('cancelRealtime');
         const notification = document.getElementById('notification');
         const notificationMessage = document.getElementById('notificationMessage');
+        
+        // 玩家列表是否显示
+        let playersVisible = true;
         
         // 初始化页面
         function initPage() {
@@ -975,11 +628,8 @@
             // 设置默认对战模式
             setMode('1v1');
             
-            // 检查URL参数，查看是否是从共享链接访问
-            checkUrlParams();
-            
-            // 检查是否加入实时房间
-            checkRealtimeRoom();
+            // 设置默认战败方
+            selectDefeat('A');
             
             // 设置事件监听器
             setupEventListeners();
@@ -989,12 +639,6 @@
             
             // 更新历史记录计数
             updateHistoryCount();
-            
-            // 初始化实时统计
-            updateRealtimeStats();
-            
-            // 启动更新计时器
-            setInterval(updateLastUpdateTime, 1000);
         }
         
         // 从本地存储加载数据
@@ -1011,96 +655,10 @@
             }
         }
         
-        // 检查URL参数
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sharedData = urlParams.get('data');
-            
-            if (sharedData) {
-                try {
-                    // 解码Base64数据
-                    const decodedData = atob(sharedData);
-                    const sharedHistory = JSON.parse(decodedData);
-                    
-                    if (Array.isArray(sharedHistory.history) && sharedHistory.history.length > 0) {
-                        // 显示共享的历史记录
-                        displaySharedHistory(sharedHistory);
-                        return true;
-                    }
-                } catch (e) {
-                    console.error('解析共享数据失败:', e);
-                }
-            }
-            return false;
-        }
-        
-        // 检查是否加入实时房间
-        function checkRealtimeRoom() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const room = urlParams.get('room');
-            
-            if (room) {
-                // 自动加入实时房间
-                joinRealtimeRoom(room);
-            }
-        }
-        
-        // 显示共享的历史记录
-        function displaySharedHistory(sharedHistory) {
-            // 创建共享视图
-            let historyHTML = '<div style="margin-bottom: 20px; padding: 15px; background-color: #2ecc71; border-radius: 8px; color: white;">';
-            historyHTML += '<h3><i class="fas fa-share-alt"></i> 共享对战记录视图</h3>';
-            historyHTML += '<p>您正在查看共享的对战记录。此视图为只读模式。</p>';
-            historyHTML += '</div>';
-            
-            if (sharedHistory.history.length === 0) {
-                historyHTML += `
-                    <div class="empty-history">
-                        <i class="fas fa-history fa-2x" style="margin-bottom: 15px;"></i>
-                        <p>共享的对战记录为空</p>
-                    </div>
-                `;
-            } else {
-                sharedHistory.history.forEach((record, index) => {
-                    const teamAText = record.teamA.join(' & ');
-                    const teamBText = record.teamB.join(' & ');
-                    
-                    historyHTML += `
-                        <div class="history-item">
-                            <div class="history-header">
-                                <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'} (#${index + 1})</span>
-                                <span>${record.timestamp}</span>
-                            </div>
-                            <div class="history-details">
-                                <div><strong>A队：</strong> ${teamAText}</div>
-                                <div><strong>B队：</strong> ${teamBText}</div>
-                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
-                            </div>
-                            ${record.note ? `<div class="history-note"><strong>备注：</strong> ${record.note}</div>` : ''}
-                        </div>
-                    `;
-                });
-                
-                historyCount.textContent = `共享记录：共 ${sharedHistory.history.length} 条对战记录`;
-                historyCount.style.display = 'block';
-            }
-            
-            historyList.innerHTML = historyHTML;
-            
-            // 隐藏编辑功能按钮，因为是只读视图
-            document.querySelector('.history-controls').style.display = 'none';
-            document.getElementById('clearHistory').style.display = 'none';
-            document.getElementById('recordBattle').style.display = 'none';
-            
-            // 添加返回按钮
-            const backButton = document.createElement('button');
-            backButton.className = 'btn';
-            backButton.style.marginTop = '20px';
-            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> 返回主页面';
-            backButton.onclick = () => {
-                window.location.href = window.location.pathname;
-            };
-            historyList.parentNode.insertBefore(backButton, historyList.nextSibling);
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('customPlayers', JSON.stringify(customPlayers));
+            localStorage.setItem('battleHistory', JSON.stringify(battleHistory));
         }
         
         // 初始化玩家选择下拉菜单
@@ -1142,7 +700,6 @@
             // 清空列表
             fixedPlayersList.innerHTML = '';
             customPlayersList.innerHTML = '';
-            allPlayersList.innerHTML = '';
             
             // 渲染固定玩家
             fixedPlayers.forEach((player, index) => {
@@ -1164,32 +721,12 @@
                 li.className = 'player-item';
                 li.innerHTML = `
                     <div>
-                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 8}.</span>
+                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 1}.</span>
                         <span class="player-name">${player}</span>
                     </div>
                     <span class="player-type custom">自定义</span>
                 `;
                 customPlayersList.appendChild(li);
-            });
-            
-            // 渲染所有玩家
-            const allPlayers = [...fixedPlayers, ...customPlayers];
-            allPlayers.forEach((player, index) => {
-                const li = document.createElement('li');
-                li.className = 'player-item';
-                
-                const playerType = index < fixedPlayers.length ? 
-                    `<span class="player-type fixed">固定</span>` : 
-                    `<span class="player-type custom">自定义</span>`;
-                
-                li.innerHTML = `
-                    <div>
-                        <span style="color: #a9a9a9; margin-right: 8px;">${index + 1}.</span>
-                        <span class="player-name">${player}</span>
-                    </div>
-                    ${playerType}
-                `;
-                allPlayersList.appendChild(li);
             });
         }
         
@@ -1206,6 +743,9 @@
             // 记录对战结果
             recordBattleBtn.addEventListener('click', recordBattle);
             
+            // 查看历史记录
+            viewHistoryBtn.addEventListener('click', showHistoryModal);
+            
             // 保存自定义玩家
             saveCustomPlayerBtn.addEventListener('click', saveCustomPlayer);
             customPlayerInput.addEventListener('keypress', (e) => {
@@ -1214,27 +754,11 @@
                 }
             });
             
-            // 保存为图片
-            saveAsImageBtn.addEventListener('click', saveAsImage);
+            // 隐藏/显示玩家列表
+            togglePlayersBtn.addEventListener('click', togglePlayersList);
             
-            // 分享到微信
-            shareWechatBtn.addEventListener('click', shareToWechat);
-            
-            // 生成共享链接
-            generateShareBtn.addEventListener('click', generateShareLink);
-            
-            // 复制链接
-            copyLinkBtn.addEventListener('click', copyShareLink);
-            
-            // 启用实时同步
-            enableRealtimeBtn.addEventListener('click', showRealtimeModal);
-            
-            // 创建实时房间
-            createRealtimeRoomBtn.addEventListener('click', createRealtimeRoom);
-            cancelRealtimeBtn.addEventListener('click', hideRealtimeModal);
-            
-            // 复制房间链接
-            copyRoomLinkBtn.addEventListener('click', copyRoomLink);
+            // 关闭历史记录模态框
+            closeHistoryBtn.addEventListener('click', hideHistoryModal);
             
             // 清除历史记录
             clearHistoryBtn.addEventListener('click', showClearConfirm);
@@ -1245,15 +769,15 @@
             battleNoteInput.addEventListener('input', validateNoteInput);
             
             // 点击模态框外部关闭
-            clearConfirmModal.addEventListener('click', (e) => {
-                if (e.target === clearConfirmModal) {
-                    hideClearConfirm();
+            historyModal.addEventListener('click', (e) => {
+                if (e.target === historyModal) {
+                    hideHistoryModal();
                 }
             });
             
-            realtimeModal.addEventListener('click', (e) => {
-                if (e.target === realtimeModal) {
-                    hideRealtimeModal();
+            clearConfirmModal.addEventListener('click', (e) => {
+                if (e.target === clearConfirmModal) {
+                    hideClearConfirm();
                 }
             });
         }
@@ -1306,7 +830,7 @@
             
             // 验证必须选择的玩家
             if (!playerA1 || !playerB1 || (mode === '2v2' && (!playerA2 || !playerB2))) {
-                alert('请选择所有玩家！');
+                showNotification('请选择所有玩家！', 'error');
                 return;
             }
             
@@ -1314,7 +838,7 @@
             const players = [playerA1, playerA2, playerB1, playerB2].filter(p => p);
             const uniquePlayers = [...new Set(players)];
             if (players.length !== uniquePlayers.length) {
-                alert('不能选择相同的玩家！');
+                showNotification('不能选择相同的玩家！', 'error');
                 return;
             }
             
@@ -1323,7 +847,7 @@
                               defeatBOption.classList.contains('selected') ? 'B' : null;
             
             if (!defeatTeam) {
-                alert('请选择战败方！');
+                showNotification('请选择战败方！', 'error');
                 return;
             }
             
@@ -1332,7 +856,7 @@
             // 验证备注只包含大写字母
             const notePattern = /^[A-Z]{0,10}$/;
             if (note && !notePattern.test(note)) {
-                alert('备注只能包含大写字母（A-Z），最多10个字符！');
+                showNotification('备注只能包含大写字母（A-Z），最多10个字符！', 'error');
                 return;
             }
             
@@ -1359,26 +883,10 @@
             // 更新历史记录计数
             updateHistoryCount();
             
-            // 更新实时统计
-            updateRealtimeStats();
-            
             // 重置表单
             battleNoteInput.value = '';
-            defeatAOption.classList.remove('selected');
-            defeatBOption.classList.remove('selected');
             
-            // 如果是实时模式，发送到服务器
-            if (isRealtimeEnabled && socket && socket.readyState === WebSocket.OPEN) {
-                const message = {
-                    type: 'new_battle',
-                    room: roomId,
-                    battle: battleRecord
-                };
-                socket.send(JSON.stringify(message));
-            }
-            
-            // 显示成功消息
-            showNotification('对战记录已保存！' + (isRealtimeEnabled ? '（已实时同步）' : ''), 'success');
+            showNotification('对战记录已保存！', 'success');
         }
         
         // 保存自定义玩家
@@ -1386,16 +894,23 @@
             const playerName = customPlayerInput.value.trim();
             
             if (!playerName) {
-                alert('请输入玩家名称！');
+                showNotification('请输入玩家名称！', 'error');
                 return;
             }
             
             if (playerName.length > 10) {
-                alert('玩家名称不能超过10个字符！');
+                showNotification('玩家名称不能超过10个字符！', 'error');
                 return;
             }
             
-            // 查找空的自定义玩家位置
+            // 检查是否已存在
+            const allPlayers = [...fixedPlayers, ...customPlayers];
+            if (allPlayers.includes(playerName)) {
+                showNotification('该玩家已存在！', 'error');
+                return;
+            }
+            
+            // 查找空的自定义玩家位置或替换现有的自定义玩家
             const emptyIndex = customPlayers.findIndex(player => player.startsWith('自定义'));
             
             if (emptyIndex !== -1) {
@@ -1418,6 +933,31 @@
             showNotification('自定义玩家已保存！', 'success');
         }
         
+        // 切换玩家列表显示/隐藏
+        function togglePlayersList() {
+            playersVisible = !playersVisible;
+            
+            if (playersVisible) {
+                playersContent.style.display = 'block';
+                togglePlayersBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏列表';
+            } else {
+                playersContent.style.display = 'none';
+                togglePlayersBtn.innerHTML = '<i class="fas fa-eye"></i> 显示列表';
+            }
+        }
+        
+        // 显示历史记录模态框
+        function showHistoryModal() {
+            renderHistory();
+            updateHistoryCount();
+            historyModal.style.display = 'flex';
+        }
+        
+        // 隐藏历史记录模态框
+        function hideHistoryModal() {
+            historyModal.style.display = 'none';
+        }
+        
         // 渲染历史记录
         function renderHistory() {
             if (battleHistory.length === 0) {
@@ -1436,16 +976,8 @@
                 const teamAText = record.teamA.join(' & ');
                 const teamBText = record.teamB.join(' & ');
                 
-                // 如果是实时记录，添加实时指示器
-                const realtimeIndicator = isRealtimeEnabled && record.id > Date.now() - 10000 ? 
-                    '<div class="realtime-indicator">实时</div>' : '';
-                
                 historyHTML += `
-                    <div class="history-item" data-id="${record.id}">
-                        ${realtimeIndicator}
-                        <button class="delete-history-btn" title="删除此记录" onclick="deleteSingleRecord(${record.id})">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div class="history-item">
                         <div class="history-header">
                             <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'} (#${index + 1})</span>
                             <span>${record.timestamp}</span>
@@ -1467,47 +999,17 @@
         function updateHistoryCount() {
             const count = battleHistory.length;
             historyCount.textContent = `当前共有 ${count} 条对战记录`;
-            historyCount.style.display = count > 0 ? 'block' : 'none';
-        }
-        
-        // 更新实时统计
-        function updateRealtimeStats() {
-            totalBattlesEl.textContent = battleHistory.length;
-            realtimeUpdatesEl.textContent = realtimeUpdates;
-            
-            if (isRealtimeEnabled) {
-                onlineUsersEl.textContent = onlineUsers;
-            }
-        }
-        
-        // 更新最后更新时间
-        function updateLastUpdateTime() {
-            if (lastUpdateTime) {
-                const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
-                lastUpdateEl.textContent = seconds + 's';
-            }
-        }
-        
-        // 删除单条记录
-        function deleteSingleRecord(id) {
-            if (confirm('确定要删除这条对战记录吗？')) {
-                battleHistory = battleHistory.filter(record => record.id !== id);
-                saveToLocalStorage();
-                renderHistory();
-                updateHistoryCount();
-                updateRealtimeStats();
-                showNotification('记录已删除！', 'success');
-            }
         }
         
         // 显示清除确认模态框
         function showClearConfirm() {
             if (battleHistory.length === 0) {
                 showNotification('当前没有对战记录可清除！', 'info');
+                hideHistoryModal();
                 return;
             }
             
-            clearConfirmMessage.textContent = `确定要清除所有 ${battleHistory.length} 条对战记录吗？此操作不可撤销！`;
+            hideHistoryModal();
             clearConfirmModal.style.display = 'flex';
         }
         
@@ -1522,222 +1024,8 @@
             saveToLocalStorage();
             renderHistory();
             updateHistoryCount();
-            updateRealtimeStats();
             hideClearConfirm();
             showNotification('所有对战记录已清除！', 'success');
-        }
-        
-        // 生成共享链接
-        function generateShareLink() {
-            if (battleHistory.length === 0) {
-                showNotification('暂无对战记录可共享！', 'info');
-                return;
-            }
-            
-            // 创建共享数据
-            const shareData = {
-                history: battleHistory,
-                players: {
-                    fixed: fixedPlayers,
-                    custom: customPlayers
-                },
-                generatedAt: new Date().toLocaleString('zh-CN'),
-                totalRecords: battleHistory.length
-            };
-            
-            // 将数据转换为Base64编码
-            const jsonString = JSON.stringify(shareData);
-            const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
-            
-            // 生成共享链接
-            const currentUrl = window.location.origin + window.location.pathname;
-            shareLink = `${currentUrl}?data=${base64Data}`;
-            
-            // 显示共享链接
-            shareLinkInput.value = shareLink;
-            shareSection.style.display = 'block';
-            
-            // 生成二维码
-            generateQRCode();
-            
-            // 滚动到共享区域
-            shareSection.scrollIntoView({ behavior: 'smooth' });
-            
-            showNotification('共享链接已生成！复制链接或扫描二维码与他人分享。', 'success');
-        }
-        
-        // 生成二维码
-        function generateQRCode() {
-            // 清除之前的二维码
-            qrcodeContainer.innerHTML = '';
-            
-            // 生成新的二维码
-            qrcode = new QRCode(qrcodeContainer, {
-                text: shareLink,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-        
-        // 复制共享链接
-        function copyShareLink() {
-            if (!shareLink) {
-                showNotification('请先生成共享链接！', 'info');
-                return;
-            }
-            
-            shareLinkInput.select();
-            shareLinkInput.setSelectionRange(0, 99999); // 移动设备兼容
-            
-            try {
-                navigator.clipboard.writeText(shareLink).then(() => {
-                    // 复制成功反馈
-                    const originalText = copyLinkBtn.innerHTML;
-                    copyLinkBtn.innerHTML = '<i class="fas fa-check"></i> 已复制';
-                    copyLinkBtn.style.backgroundColor = '#2ecc71';
-                    
-                    setTimeout(() => {
-                        copyLinkBtn.innerHTML = originalText;
-                        copyLinkBtn.style.backgroundColor = '';
-                    }, 2000);
-                    
-                    showNotification('链接已复制到剪贴板！', 'success');
-                }).catch(err => {
-                    // 如果clipboard API失败，使用传统方法
-                    document.execCommand('copy');
-                    showNotification('链接已复制到剪贴板！', 'success');
-                });
-            } catch (err) {
-                // 降级方案
-                document.execCommand('copy');
-                showNotification('链接已复制到剪贴板！', 'success');
-            }
-        }
-        
-        // 显示实时同步模态框
-        function showRealtimeModal() {
-            realtimeModal.style.display = 'flex';
-        }
-        
-        // 隐藏实时同步模态框
-        function hideRealtimeModal() {
-            realtimeModal.style.display = 'none';
-        }
-        
-        // 创建实时房间
-        function createRealtimeRoom() {
-            const roomName = roomNameInput.value.trim() || '默认房间';
-            const password = roomPasswordInput.value.trim();
-            
-            // 生成房间ID
-            roomId = 'room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            
-            // 生成房间链接
-            const currentUrl = window.location.origin + window.location.pathname;
-            const roomLink = `${currentUrl}?room=${roomId}`;
-            
-            // 显示房间链接
-            roomLinkInput.value = roomLink;
-            roomLinkContainer.style.display = 'block';
-            
-            // 连接WebSocket服务器
-            connectWebSocket(roomId, roomName, password);
-            
-            showNotification('实时房间创建成功！正在连接服务器...', 'success');
-        }
-        
-        // 加入实时房间
-        function joinRealtimeRoom(roomId) {
-            // 连接WebSocket服务器
-            connectWebSocket(roomId, '加入的房间', '');
-        }
-        
-        // 复制房间链接
-        function copyRoomLink() {
-            roomLinkInput.select();
-            roomLinkInput.setSelectionRange(0, 99999);
-            
-            try {
-                navigator.clipboard.writeText(roomLinkInput.value).then(() => {
-                    showNotification('房间链接已复制到剪贴板！', 'success');
-                }).catch(err => {
-                    document.execCommand('copy');
-                    showNotification('房间链接已复制到剪贴板！', 'success');
-                });
-            } catch (err) {
-                document.execCommand('copy');
-                showNotification('房间链接已复制到剪贴板！', 'success');
-            }
-        }
-        
-        // 连接WebSocket服务器
-        function connectWebSocket(roomId, roomName, password) {
-            // 注意：这里需要一个真正的WebSocket服务器
-            // 由于无法部署真实的WebSocket服务器，这里使用模拟连接
-            // 在实际应用中，需要替换为真实的WebSocket服务器地址
-            
-            updateConnectionStatus('正在连接实时服务器...', false);
-            
-            // 模拟WebSocket连接
-            setTimeout(() => {
-                isRealtimeEnabled = true;
-                updateConnectionStatus('已连接实时服务器', true);
-                realtimeInfo.style.display = 'block';
-                enableRealtimeBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 实时同步中';
-                enableRealtimeBtn.style.backgroundColor = '#27ae60';
-                
-                // 更新统计信息
-                onlineUsers = Math.floor(Math.random() * 10) + 1; // 模拟在线用户
-                updateRealtimeStats();
-                
-                showNotification(`已加入实时房间：${roomName}`, 'success');
-                
-                // 模拟接收实时消息
-                simulateRealtimeUpdates();
-                
-            }, 1500);
-        }
-        
-        // 模拟实时更新
-        function simulateRealtimeUpdates() {
-            // 模拟定期接收新对战记录
-            setInterval(() => {
-                if (isRealtimeEnabled && Math.random() > 0.7) {
-                    // 模拟其他用户添加的记录
-                    const simulatedRecord = {
-                        id: Date.now(),
-                        mode: Math.random() > 0.5 ? '1v1' : '2v2',
-                        teamA: ['模拟玩家A1', Math.random() > 0.5 ? '模拟玩家A2' : ''].filter(p => p),
-                        teamB: ['模拟玩家B1', Math.random() > 0.5 ? '模拟玩家B2' : ''].filter(p => p),
-                        defeatedTeam: Math.random() > 0.5 ? 'A' : 'B',
-                        note: Math.random() > 0.5 ? 'WIN' : 'LOSE',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        simulated: true
-                    };
-                    
-                    // 添加到历史记录
-                    battleHistory.unshift(simulatedRecord);
-                    
-                    // 更新界面
-                    renderHistory();
-                    updateHistoryCount();
-                    realtimeUpdates++;
-                    lastUpdateTime = Date.now();
-                    updateRealtimeStats();
-                    
-                    showNotification('收到新的实时对战记录！', 'info');
-                }
-            }, 10000); // 每10秒可能收到新记录
-        }
-        
-        // 更新连接状态
-        function updateConnectionStatus(text, connected) {
-            statusText.textContent = text;
-            statusDot.className = 'status-dot ' + (connected ? 'status-connected' : 'status-disconnected');
-            connectionStatus.style.backgroundColor = connected ? '#1f4068' : '#1f4068';
         }
         
         // 显示通知
@@ -1754,102 +1042,6 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
-        }
-        
-        // 保存为图片
-        function saveAsImage() {
-            if (battleHistory.length === 0) {
-                showNotification('暂无对战记录可保存！', 'info');
-                return;
-            }
-            
-            // 创建要保存的内容
-            const content = document.createElement('div');
-            content.style.backgroundColor = '#162447';
-            content.style.padding = '20px';
-            content.style.borderRadius = '12px';
-            content.style.color = '#e6e6e6';
-            
-            let html = '<h2 style="color: #4cc9f0; text-align: center; margin-bottom: 20px;">对战记录</h2>';
-            
-            battleHistory.forEach((record, index) => {
-                if (index < 5) { // 只保存最近5条记录
-                    const teamAText = record.teamA.join(' & ');
-                    const teamBText = record.teamB.join(' & ');
-                    
-                    html += `
-                        <div style="background-color: #1f4068; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid #4cc9f0;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #fca311; font-weight: 600;">
-                                <span>${record.mode === '1v1' ? '1V1 对战' : '2V2 对战'}</span>
-                                <span>${record.timestamp}</span>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
-                                <div><strong>A队：</strong> ${teamAText}</div>
-                                <div><strong>B队：</strong> ${teamBText}</div>
-                                <div><strong>战败方：</strong> <span style="color: #e63946;">${record.defeatedTeam}队</span></div>
-                            </div>
-                            ${record.note ? `<div style="margin-top: 10px; padding: 8px; background-color: #0f3460; border-radius: 4px; font-style: italic;"><strong>备注：</strong> ${record.note}</div>` : ''}
-                        </div>
-                    `;
-                }
-            });
-            
-            content.innerHTML = html;
-            
-            // 使用html2canvas将内容转换为图片
-            html2canvas(content).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `对战记录_${new Date().toISOString().slice(0,10)}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        }
-        
-        // 分享到微信（模拟功能）
-        function shareToWechat() {
-            if (battleHistory.length === 0) {
-                showNotification('暂无对战记录可分享！', 'info');
-                return;
-            }
-            
-            // 创建分享内容
-            let shareContent = "【玩家对战记录】\n\n";
-            
-            // 添加最近3场对战记录
-            const recentBattles = battleHistory.slice(0, 3);
-            recentBattles.forEach((record, index) => {
-                const teamAText = record.teamA.join(' & ');
-                const teamBText = record.teamB.join(' & ');
-                
-                shareContent += `对战${index + 1} (${record.mode}):\n`;
-                shareContent += `A队: ${teamAText}\n`;
-                shareContent += `B队: ${teamBText}\n`;
-                shareContent += `战败方: ${record.defeatedTeam}队\n`;
-                if (record.note) {
-                    shareContent += `备注: ${record.note}\n`;
-                }
-                shareContent += `时间: ${record.timestamp}\n\n`;
-            });
-            
-            shareContent += "---\n";
-            shareContent += "玩家对战记录系统\n";
-            shareContent += "固定玩家: " + fixedPlayers.join(", ") + "\n";
-            shareContent += "自定义玩家: " + customPlayers.join(", ") + "\n";
-            
-            // 在实际应用中，这里会调用微信分享API
-            // 由于微信分享需要认证的公众号，这里使用alert模拟
-            showNotification("分享内容已复制到剪贴板，请在微信中粘贴分享", "info");
-            
-            // 复制到剪贴板
-            navigator.clipboard.writeText(shareContent).then(() => {
-                console.log("分享内容已复制到剪贴板");
-            });
-        }
-        
-        // 保存到本地存储
-        function saveToLocalStorage() {
-            localStorage.setItem('customPlayers', JSON.stringify(customPlayers));
-            localStorage.setItem('battleHistory', JSON.stringify(battleHistory));
         }
         
         // 页面加载完成后初始化
